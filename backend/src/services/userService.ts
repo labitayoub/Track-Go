@@ -11,6 +11,13 @@ interface RegisterParams {
     telephone: string;
 }
 
+interface RegisterInput {
+    nom: string;
+    email: string;
+    password: string;
+    telephone: string;
+}
+
 export const register = async ({nom, email, password, role, telephone}: RegisterParams)=> {
     const findUser = await userModel.findOne({ email })
     if(findUser){
@@ -21,9 +28,9 @@ export const register = async ({nom, email, password, role, telephone}: Register
         nom,
         email,
         password: hashedPassword,
-        role,
+        role: 'chauffeur', // Toujours chauffeur lors du register
         telephone,
-        isActive: true
+        isActive: false // Attend activation admin
     })
     await newUser.save()
     return newUser
@@ -40,6 +47,10 @@ export const login = async ({email, password}: LoginParams) => {
         return {error: {message: "User not found"}}
     }
     
+    if(!findUser.isActive){
+        return {error: {message: "Account not activated. Please wait for admin approval."}}
+    }
+    
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     if(passwordMatch){
         const token = jwt.sign({ id: findUser._id, role: findUser.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
@@ -47,4 +58,29 @@ export const login = async ({email, password}: LoginParams) => {
     }
 
     return {error: {message: "Incorrect password"}}
+}
+
+export const activateUser = async (userId: string) => {
+    try {
+        const user = await userModel.findByIdAndUpdate(
+            userId, 
+            { isActive: true }, 
+            { new: true }
+        );
+        if (!user) {
+            return { error: { message: "User not found" } };
+        }
+        return { user, message: "User activated successfully" };
+    } catch (error) {
+        return { error: { message: "Error activating user" } };
+    }
+}
+
+export const getPendingUsers = async () => {
+    try {
+        const users = await userModel.find({ isActive: false, role: 'chauffeur' }).select('-password');
+        return users;
+    } catch (error) {
+        return { error: { message: "Error fetching pending users" } };
+    }
 }

@@ -11,7 +11,10 @@ export const registerController = async (req: Request, res: Response) => {
             return res.status(400).json(result.error);
         }
 
-        res.status(201).json({ message: "User registered successfully", user: result });
+        res.status(201).json({ 
+            message: "Chauffeur registered successfully. Waiting for admin activation.", 
+            user: { ...result.toObject(), password: undefined } 
+        });
     } catch (error) {
         console.error("Erreur dans registerController:", error);
         res.status(500).json({ message: "Server error", details: error instanceof Error ? error.message : "Unknown error" });
