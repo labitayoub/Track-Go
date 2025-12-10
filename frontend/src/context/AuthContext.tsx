@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import type { AuthState } from '../types/auth';
+import { authAPI } from '../services/api';
 
 interface AuthContextType extends AuthState {
     login: (email: string, password: string) => Promise<void>;
@@ -10,65 +11,53 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    // Récupérer user depuis localStorage au démarrage
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token');
+
     const [state, setState] = useState<AuthState>({
-        user: null,
-        token: localStorage.getItem('token'),
-        isAuthenticated: false,
+        user: savedUser ? JSON.parse(savedUser) : null,
+        token: savedToken,
+        isAuthenticated: !!(savedToken && savedUser),
         loading: false
     });
 
     const login = async (email: string, password: string) => {
         setState(prev => ({ ...prev, loading: true }));
         try {
-            const response = await fetch('http://localhost:5000/api/user/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+            const res = await authAPI.login(email, password);
+            const { user, token } = res.data;
+            
+            // Sauvegarder dans localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            setState({
+                user,
+                token,
+                isAuthenticated: true,
+                loading: false
             });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('token', data.token);
-                setState({
-                    user: data.user,
-                    token: data.token,
-                    isAuthenticated: true,
-                    loading: false
-                });
-            } else {
-                throw new Error(data.message);
-            }
-        } catch (error) {
+        } catch (error: any) {
             setState(prev => ({ ...prev, loading: false }));
-            throw error;
+            throw new Error(error.response?.data?.message || 'Erreur de connexion');
         }
     };
 
     const register = async (userData: any) => {
         setState(prev => ({ ...prev, loading: true }));
         try {
-            const response = await fetch('http://localhost:5000/api/user/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message);
-            }
-
+            await authAPI.register(userData);
             setState(prev => ({ ...prev, loading: false }));
-        } catch (error) {
+        } catch (error: any) {
             setState(prev => ({ ...prev, loading: false }));
-            throw error;
+            throw new Error(error.response?.data?.message || 'Erreur inscription');
         }
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setState({
             user: null,
             token: null,
