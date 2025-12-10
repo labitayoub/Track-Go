@@ -1,15 +1,11 @@
 import jwt from 'jsonwebtoken';
 import type { Request, Response, NextFunction } from 'express';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
+interface ExtendRequest extends Request {
+    user?: any;
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: ExtendRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
 
@@ -19,6 +15,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     req.user = decoded;
+    console.log(decoded);
     next();
   } catch (error) {
     return res.status(401).json({ message: "Token invalide" });
