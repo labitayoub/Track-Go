@@ -16,3 +16,4 @@ app.use('/user', userRoute)
 app.listen(PORT, () => {
   console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
 });
+
