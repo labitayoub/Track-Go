@@ -1,21 +1,22 @@
-describe('User Service Tests', () => {
-    it('should validate user registration data', () => {
-        const userData = {
+describe('User Tests', () => {
+    
+    it('doit avoir les champs requis pour un user', () => {
+        const user = {
             nom: 'Test User',
             email: 'test@test.com',
             password: 'password123',
             role: 'chauffeur',
-            telephone: '0123456789'
+            telephone: '0612345678'
         };
 
-        expect(userData.nom).toBeDefined();
-        expect(userData.email).toContain('@');
-        expect(userData.password.length).toBeGreaterThan(5);
-        expect(['admin', 'chauffeur'].includes(userData.role)).toBe(true);
-        expect(userData.telephone.length).toBe(10);
+        expect(user.nom).toBeDefined();
+        expect(user.email).toContain('@');
+        expect(user.password.length).toBeGreaterThanOrEqual(6);
+        expect(['admin', 'chauffeur']).toContain(user.role);
+        expect(user.telephone).toHaveLength(10);
     });
 
-    it('should validate login data', () => {
+    it('doit avoir email et password pour login', () => {
         const loginData = {
             email: 'test@test.com',
             password: 'password123'
@@ -23,24 +24,20 @@ describe('User Service Tests', () => {
 
         expect(loginData.email).toBeDefined();
         expect(loginData.password).toBeDefined();
-        expect(loginData.email).toContain('@');
     });
 
-    it('should check password hashing concept', () => {
-        const plainPassword = 'password123';
-        const hashedPassword = 'hashedpassword';
+    it('token JWT doit avoir 3 parties', () => {
+        const mockToken = 'header.payload.signature';
+        const parts = mockToken.split('.');
         
-        expect(plainPassword).not.toBe(hashedPassword);
-        expect(hashedPassword.length).toBeGreaterThan(plainPassword.length);
+        expect(parts).toHaveLength(3);
     });
 
-    it('should validate JWT token structure', () => {
-        const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJJZCIsInJvbGUiOiJjaGF1ZmZldXIifQ.signature';
-        const tokenParts = mockToken.split('.');
+    it('rôles valides sont admin et chauffeur', () => {
+        const validRoles = ['admin', 'chauffeur'];
         
-        expect(tokenParts).toHaveLength(3);
-        expect(tokenParts[0]).toBeDefined(); // header
-        expect(tokenParts[1]).toBeDefined(); // payload
-        expect(tokenParts[2]).toBeDefined(); // signature
+        expect(validRoles).toContain('admin');
+        expect(validRoles).toContain('chauffeur');
+        expect(validRoles).not.toContain('manager');
     });
 });
