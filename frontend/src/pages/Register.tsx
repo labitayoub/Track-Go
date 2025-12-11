@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Box,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
+import { PersonAdd } from "@mui/icons-material";
 
 const Register = () => {
   const [nom, setNom] = useState("");
@@ -8,7 +18,7 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [telephone, setTelephone] = useState("");
-  const role = "chauffeur"; // Toujours chauffeur
+  const role = "chauffeur";
   const [error, setError] = useState("");
   const { register, loading } = useAuth();
   const navigate = useNavigate();
@@ -35,64 +45,102 @@ const Register = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '400px', margin: '50px auto' }}>
-      <h2>Inscription</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Nom"
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          required
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <input
-          type="tel"
-          placeholder="Téléphone"
-          value={telephone}
-          onChange={(e) => setTelephone(e.target.value)}
-          required
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <div style={{ padding: '10px', marginBottom: '10px', backgroundColor: '#f8f9fa', border: '1px solid #dee2e6' }}>
-          <strong>Rôle: Chauffeur</strong>
-        </div>
-        <input
-          type="password"
-          placeholder="Mot de passe"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        <input
-          type="password"
-          placeholder="Confirmer mot de passe"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-          style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
-        />
-        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none' }}
-        >
-          {loading ? 'Inscription...' : 'S\'inscrire'}
-        </button>
-      </form>
-      <Link to="/login" style={{ display: 'block', marginTop: '10px' }}>Se connecter</Link>
-    </div>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      bgcolor: '#f5f5f5',
+      py: 4
+    }}>
+      <Paper elevation={3} sx={{ p: 4, width: '100%', maxWidth: 400 }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <PersonAdd sx={{ fontSize: 50, color: '#2e7d32', mb: 1 }} />
+          <Typography variant="h5" fontWeight="bold">
+            Inscription
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Créer un compte chauffeur
+          </Typography>
+        </Box>
+
+        <form onSubmit={handleSubmit}>
+          <TextField
+            type="text"
+            label="Nom complet"
+            value={nom}
+            onChange={(e) => setNom(e.target.value)}
+            required
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            type="email"
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            type="tel"
+            label="Téléphone"
+            value={telephone}
+            onChange={(e) => setTelephone(e.target.value)}
+            required
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          
+          <TextField
+            type="password"
+            label="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            type="password"
+            label="Confirmer mot de passe"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={loading}
+            color="success"
+            size="large"
+            sx={{ py: 1.5 }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "S'inscrire"}
+          </Button>
+        </form>
+
+        <Typography variant="body2" sx={{ textAlign: 'center', mt: 3 }}>
+          Déjà un compte ?{" "}
+          <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none' }}>
+            Se connecter
+          </Link>
+        </Typography>
+      </Paper>
+    </Box>
   );
 };
 
 export default Register;
+

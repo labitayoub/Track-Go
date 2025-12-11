@@ -84,3 +84,25 @@ export const getPendingUsers = async () => {
         return { error: { message: "Error fetching pending users" } };
     }
 }
+
+// Récupérer tous les chauffeurs
+export const getAllChauffeurs = async () => {
+    const chauffeurs = await userModel.find({ role: 'chauffeur' }).select('-password');
+    return chauffeurs;
+}
+
+// Activer/Désactiver un utilisateur
+export const toggleUserStatus = async (userId: string) => {
+    const user = await userModel.findById(userId);
+    if (!user) {
+        return { error: { message: "User not found" } };
+    }
+    
+    user.isActive = !user.isActive;
+    await user.save();
+    
+    return { 
+        user: { ...user.toObject(), password: undefined },
+        message: user.isActive ? "Chauffeur activé" : "Chauffeur désactivé"
+    };
+}

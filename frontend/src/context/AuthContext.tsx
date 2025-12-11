@@ -1,82 +1,52 @@
-import { createContext, useContext, useState } from 'react';
-import type { AuthState } from '../types/auth';
-import { authAPI } from '../services/api';
+import { createContext, useContext, useState } from "react";
+import { authAPI } from "../services/api";
 
-interface AuthContextType extends AuthState {
-    login: (email: string, password: string) => Promise<void>;
-    register: (userData: any) => Promise<void>;
-    logout: () => void;
-}
+// 1. Create Context
+const AuthContext = createContext<any>(null);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
+// 2. Provider
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    // Récupérer user depuis localStorage au démarrage
-    const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('token');
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user") || "null")
+  );
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
-    const [state, setState] = useState<AuthState>({
-        user: savedUser ? JSON.parse(savedUser) : null,
-        token: savedToken,
-        isAuthenticated: !!(savedToken && savedUser),
-        loading: false
-    });
+  // --- Login ---
+  const login = async (email: string, password: string) => {
+    const res = await authAPI.login(email, password);
 
-    const login = async (email: string, password: string) => {
-        setState(prev => ({ ...prev, loading: true }));
-        try {
-            const res = await authAPI.login(email, password);
-            const { user, token } = res.data;
-            
-            // Sauvegarder dans localStorage
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-            
-            setState({
-                user,
-                token,
-                isAuthenticated: true,
-                loading: false
-            });
-        } catch (error: any) {
-            setState(prev => ({ ...prev, loading: false }));
-            throw new Error(error.response?.data?.message || 'Erreur de connexion');
-        }
-    };
+    const userData = res.data.user;
+    const userToken = res.data.token;
 
-    const register = async (userData: any) => {
-        setState(prev => ({ ...prev, loading: true }));
-        try {
-            await authAPI.register(userData);
-            setState(prev => ({ ...prev, loading: false }));
-        } catch (error: any) {
-            setState(prev => ({ ...prev, loading: false }));
-            throw new Error(error.response?.data?.message || 'Erreur inscription');
-        }
-    };
+    setUser(userData);
+    setToken(userToken);
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setState({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            loading: false
-        });
-    };
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", userToken);
+  };
 
-    return (
-        <AuthContext.Provider value={{ ...state, login, register, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  // --- Register ---
+  const register = async (data: any) => {
+    await authAPI.register(data);
+  };
+
+  // --- Logout ---
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
+
+  // isAuthenticated pour les routes
+  const isAuthenticated = !!token && !!user;
+
+  return (
+    <AuthContext.Provider value={{ user, token, isAuthenticated, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within AuthProvider');
-    }
-    return context;
-};
+// 3. Custom Hook
+export const useAuth = () => useContext(AuthContext);

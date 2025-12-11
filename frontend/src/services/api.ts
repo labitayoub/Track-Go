@@ -38,4 +38,13 @@ export const authAPI = {
         api.post('/user/register', userData),
 };
 
+// API Admin
+export const adminAPI = {
+    getChauffeurs: () =>
+        api.get('/user/chauffeurs'),
+    
+    toggleChauffeurStatus: (id: string) =>
+        api.patch(`/user/chauffeurs/${id}/toggle`),
+};
+
 export default api;
