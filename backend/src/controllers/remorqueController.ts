@@ -40,6 +40,15 @@ export const getAllRemorquesController = async (_req: Request, res: Response) =>
     }
 };
 
+export const getAvailableRemorquesController = async (_req: Request, res: Response) => {
+    try {
+        const remorques = await remorqueService.getAvailableRemorques();
+        res.json(remorques);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
 export const getRemorqueByIdController = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;

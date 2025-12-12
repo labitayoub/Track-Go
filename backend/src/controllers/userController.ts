@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { register, login, getAllChauffeurs, toggleUserStatus } from "../services/userService.js";
+import { register, login, getAllChauffeurs, toggleUserStatus, getAvailableChauffeurs } from "../services/userService.js";
 import { registerSchema, loginSchema } from "../validators/userValidator.js";
 import type { AuthRequest } from "../middlewares/authMiddleware.js";
 
@@ -51,6 +51,15 @@ export const loginController = async (req: Request, res: Response) => {
 export const getChauffeursController = async (req: AuthRequest, res: Response) => {
     try {
         const chauffeurs = await getAllChauffeurs();
+        res.status(200).json({ chauffeurs });
+    } catch {
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const getAvailableChauffeursController = async (req: AuthRequest, res: Response) => {
+    try {
+        const chauffeurs = await getAvailableChauffeurs();
         res.status(200).json({ chauffeurs });
     } catch {
         res.status(500).json({ message: "Server error" });

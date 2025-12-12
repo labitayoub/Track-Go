@@ -3,6 +3,7 @@ import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 import {
     createRemorqueController,
     getAllRemorquesController,
+    getAvailableRemorquesController,
     getRemorqueByIdController,
     updateRemorqueController,
     deleteRemorqueController
@@ -14,6 +15,7 @@ router.use(authenticate);
 
 router.post('/', authorize('admin'), createRemorqueController);
 router.get('/', getAllRemorquesController);
+router.get('/available', authorize('admin'), getAvailableRemorquesController);
 router.get('/:id', getRemorqueByIdController);
 router.put('/:id', authorize('admin'), updateRemorqueController);
 router.delete('/:id', authorize('admin'), deleteRemorqueController);

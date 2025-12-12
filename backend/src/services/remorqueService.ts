@@ -1,4 +1,13 @@
 import { remorqueModel, type IRemorque } from '../models/remorqueModel.js';
+import { getActiveTrajetResources } from './trajetService.js';
+
+export const getAvailableRemorques = async () => {
+    const { remorqueIds } = await getActiveTrajetResources();
+    return remorqueModel.find({ 
+        _id: { $nin: remorqueIds },
+        statut: { $ne: 'maintenance' }
+    }).sort({ createdAt: -1 });
+};
 
 export const createRemorque = async (data: Partial<IRemorque>) => {
     const remorque = new remorqueModel(data);

@@ -91,6 +91,17 @@ export const getAllChauffeurs = async () => {
     return chauffeurs;
 }
 
+// Récupérer les chauffeurs disponibles (pas en trajet actif)
+export const getAvailableChauffeurs = async () => {
+    const { getActiveTrajetResources } = await import('./trajetService.js');
+    const { chauffeurIds } = await getActiveTrajetResources();
+    return userModel.find({ 
+        role: 'chauffeur',
+        isActive: true,
+        _id: { $nin: chauffeurIds }
+    }).select('-password');
+}
+
 // Activer/Désactiver un utilisateur
 export const toggleUserStatus = async (userId: string) => {
     const user = await userModel.findById(userId);

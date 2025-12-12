@@ -126,18 +126,27 @@ const Trajets = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [trajetsRes, camionsRes, remorquesRes] = await Promise.all([
-                isAdmin ? trajetAPI.getAll() : trajetAPI.getMyTrajets(),
-                camionAPI.getAll(),
-                remorqueAPI.getAll(),
-            ]);
+            const trajetsRes = isAdmin ? await trajetAPI.getAll() : await trajetAPI.getMyTrajets();
             setTrajets(trajetsRes.data.trajets || trajetsRes.data);
-            setCamions(camionsRes.data.camions || camionsRes.data);
-            setRemorques(remorquesRes.data.remorques || remorquesRes.data);
 
             if (isAdmin) {
-                const chauffeursRes = await adminAPI.getChauffeurs();
+                // Pour l'admin, charger les ressources disponibles
+                const [camionsRes, remorquesRes, chauffeursRes] = await Promise.all([
+                    camionAPI.getAvailable(),
+                    remorqueAPI.getAvailable(),
+                    adminAPI.getAvailableChauffeurs(),
+                ]);
+                setCamions(camionsRes.data.camions || camionsRes.data);
+                setRemorques(remorquesRes.data.remorques || remorquesRes.data);
                 setChauffeurs(chauffeursRes.data.chauffeurs || chauffeursRes.data);
+            } else {
+                // Pour le chauffeur, charger tous les véhicules (pour affichage)
+                const [camionsRes, remorquesRes] = await Promise.all([
+                    camionAPI.getAll(),
+                    remorqueAPI.getAll(),
+                ]);
+                setCamions(camionsRes.data.camions || camionsRes.data);
+                setRemorques(remorquesRes.data.remorques || remorquesRes.data);
             }
         } catch (error) {
             console.error('Erreur chargement données:', error);

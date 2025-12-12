@@ -43,6 +43,9 @@ export const adminAPI = {
     getChauffeurs: () =>
         api.get('/user/chauffeurs'),
     
+    getAvailableChauffeurs: () =>
+        api.get('/user/chauffeurs/available'),
+    
     toggleChauffeurStatus: (id: string) =>
         api.patch(`/user/chauffeurs/${id}/toggle`),
 };
@@ -50,6 +53,7 @@ export const adminAPI = {
 // API Camions
 export const camionAPI = {
     getAll: () => api.get('/camion'),
+    getAvailable: () => api.get('/camion/available'),
     getById: (id: string) => api.get(`/camion/${id}`),
     create: (data: any) => api.post('/camion', data),
     update: (id: string, data: any) => api.put(`/camion/${id}`, data),
@@ -59,6 +63,7 @@ export const camionAPI = {
 // API Remorques
 export const remorqueAPI = {
     getAll: () => api.get('/remorque'),
+    getAvailable: () => api.get('/remorque/available'),
     getById: (id: string) => api.get(`/remorque/${id}`),
     create: (data: any) => api.post('/remorque', data),
     update: (id: string, data: any) => api.put(`/remorque/${id}`, data),

@@ -1,5 +1,18 @@
 import { trajetModel, type ITrajet } from '../models/trajetModel.js';
 
+// Récupérer les IDs des ressources actuellement en trajet actif
+export const getActiveTrajetResources = async () => {
+    const activeTrajets = await trajetModel.find({ 
+        statut: { $in: ['a_faire', 'en_cours'] } 
+    });
+    
+    return {
+        camionIds: activeTrajets.map(t => t.camionId.toString()),
+        remorqueIds: activeTrajets.filter(t => t.remorqueId).map(t => t.remorqueId!.toString()),
+        chauffeurIds: activeTrajets.map(t => t.chauffeurId.toString())
+    };
+};
+
 export const createTrajet = async (data: Partial<ITrajet>) => {
     const trajet = new trajetModel(data);
     return trajet.save();
