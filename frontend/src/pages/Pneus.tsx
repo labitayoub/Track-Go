@@ -1,413 +1,571 @@
 import { useState, useEffect } from 'react';
-import { pneuAPI, camionAPI, remorqueAPI } from '../services/api';
 import {
-    Box,
-    Button,
-    Typography,
-    Chip,
-    CircularProgress,
-    Card,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    MenuItem,
-    IconButton,
-    Stack,
-    useMediaQuery,
-    useTheme,
-    FormControl,
-    InputLabel,
-    Select,
+  Box,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+
+  Chip,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
-    Add,
-    Edit,
-    Delete,
-    TireRepair,
-} from '@mui/icons-material';
 
+  Delete as DeleteIcon,
+
+  DirectionsCar as CamionIcon,
+  LocalShipping as RemorqueIcon,
+} from '@mui/icons-material';
+import { pneuAPI, camionAPI, remorqueAPI } from '../services/api';
+
+// Interfaces
 interface Pneu {
-    _id: string;
-    vehiculeId: string;
-    vehiculeType: 'camion' | 'remorque';
-    position: string;
-    marque: string;
-    kmInstallation: number;
-    kmLimite: number;
-    statut: 'bon' | 'use' | 'a_changer';
-    createdAt: string;
+  _id: string;
+  vehiculeType: 'camion' | 'remorque';
+  vehiculeId: string;
+  position: string;
+  marque: string;
+  kmInstallation: number;
+  kmLimite: number;
+  statut: 'bon' | 'usé' | 'critique';
 }
 
 interface Vehicule {
-    _id: string;
-    immatriculation: string;
+  _id: string;
+  immatriculation: string;
+  nombreEssieux?: number;
 }
 
-const statutColors: Record<string, 'success' | 'warning' | 'error'> = {
-    bon: 'success',
-    use: 'warning',
-    a_changer: 'error',
-};
+// Positions des pneus
+const camionPositions = ['AV-G', 'AV-D', 'AR1-G', 'AR1-D', 'AR2-G', 'AR2-D'];
 
-const statutLabels: Record<string, string> = {
-    bon: 'Bon état',
-    use: 'Usé',
-    a_changer: 'À changer',
-};
+const remorque8Positions = [
+  'E1-G1', 'E1-G2', 'E1-D1', 'E1-D2',
+  'E2-G1', 'E2-G2', 'E2-D1', 'E2-D2',
+];
 
-const initialFormState = {
-    vehiculeId: '',
-    vehiculeType: 'camion' as 'camion' | 'remorque',
-    position: '',
-    marque: '',
-    kmInstallation: 0,
-    kmLimite: 0,
-    statut: 'bon' as 'bon' | 'use' | 'a_changer',
-};
+const remorque12Positions = [
+  'E1-G1', 'E1-G2', 'E1-D1', 'E1-D2',
+  'E2-G1', 'E2-G2', 'E2-D1', 'E2-D2',
+  'E3-G1', 'E3-G2', 'E3-D1', 'E3-D2',
+];
 
 const Pneus = () => {
-    const [pneus, setPneus] = useState<Pneu[]>([]);
-    const [camions, setCamions] = useState<Vehicule[]>([]);
-    const [remorques, setRemorques] = useState<Vehicule[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [formData, setFormData] = useState(initialFormState);
-    const [saving, setSaving] = useState(false);
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // États
+  const [pneus, setPneus] = useState<Pneu[]>([]);
+  const [camions, setCamions] = useState<Vehicule[]>([]);
+  const [remorques, setRemorques] = useState<Vehicule[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-    useEffect(() => {
-        loadData();
-    }, []);
+  // Sélection du véhicule
+  const [vehiculeType, setVehiculeType] = useState<'camion' | 'remorque'>('camion');
+  const [selectedVehiculeId, setSelectedVehiculeId] = useState('');
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const [pneusRes, camionsRes, remorquesRes] = await Promise.all([
-                pneuAPI.getAll(),
-                camionAPI.getAll(),
-                remorqueAPI.getAll(),
-            ]);
-            setPneus(pneusRes.data.pneus || pneusRes.data);
-            setCamions(camionsRes.data.camions || camionsRes.data);
-            setRemorques(remorquesRes.data.remorques || remorquesRes.data);
-        } catch (error) {
-            console.error('Erreur chargement données:', error);
-        }
-        setLoading(false);
+  // Dialog
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingPneu, setEditingPneu] = useState<Pneu | null>(null);
+  const [selectedPosition, setSelectedPosition] = useState('');
+
+  // Formulaire
+  const [formData, setFormData] = useState({
+    marque: '',
+    kmInstallation: 0,
+    kmLimite: 50000,
+    statut: 'bon' as 'bon' | 'usé' | 'critique',
+  });
+
+  // Charger les véhicules au démarrage
+  useEffect(() => {
+    const loadVehicules = async () => {
+      try {
+        const [camionsRes, remorquesRes] = await Promise.all([
+          camionAPI.getAll(),
+          remorqueAPI.getAll(),
+        ]);
+        setCamions(camionsRes.data);
+        setRemorques(remorquesRes.data);
+      } catch (err) {
+        console.error('Erreur chargement véhicules:', err);
+      }
     };
+    loadVehicules();
+  }, []);
 
-    const getVehiculeImmat = (vehiculeId: string, vehiculeType: string): string => {
-        const list = vehiculeType === 'camion' ? camions : remorques;
-        const vehicule = list.find((v) => v._id === vehiculeId);
-        return vehicule?.immatriculation || 'N/A';
-    };
-
-    const handleOpenDialog = (pneu?: Pneu) => {
-        if (pneu) {
-            setEditingId(pneu._id);
-            setFormData({
-                vehiculeId: pneu.vehiculeId,
-                vehiculeType: pneu.vehiculeType,
-                position: pneu.position,
-                marque: pneu.marque,
-                kmInstallation: pneu.kmInstallation,
-                kmLimite: pneu.kmLimite,
-                statut: pneu.statut,
-            });
-        } else {
-            setEditingId(null);
-            setFormData(initialFormState);
-        }
-        setDialogOpen(true);
-    };
-
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setEditingId(null);
-        setFormData(initialFormState);
-    };
-
-    const handleSubmit = async () => {
-        setSaving(true);
-        try {
-            if (editingId) {
-                await pneuAPI.update(editingId, formData);
-            } else {
-                await pneuAPI.create(formData);
-            }
-            handleCloseDialog();
-            loadData();
-        } catch (error) {
-            console.error('Erreur sauvegarde:', error);
-        }
-        setSaving(false);
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce pneu ?')) return;
-        try {
-            await pneuAPI.delete(id);
-            loadData();
-        } catch (error) {
-            console.error('Erreur suppression:', error);
-        }
-    };
-
-    const vehiculeOptions = formData.vehiculeType === 'camion' ? camions : remorques;
-
-    if (loading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-                <CircularProgress size={40} />
-            </Box>
-        );
+  // Charger les pneus quand un véhicule est sélectionné
+  useEffect(() => {
+    if (selectedVehiculeId) {
+      loadPneus();
+    } else {
+      setPneus([]);
     }
+  }, [selectedVehiculeId, vehiculeType]);
 
+  const loadPneus = async () => {
+    if (!selectedVehiculeId) return;
+    
+    setLoading(true);
+    try {
+      const response = await pneuAPI.getByVehicule(vehiculeType, selectedVehiculeId);
+      setPneus(response.data);
+      setError('');
+    } catch (err) {
+      console.error('Erreur chargement pneus:', err);
+      setError('Erreur lors du chargement des pneus');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Obtenir les positions selon le type de véhicule
+  const getPositions = (): string[] => {
+    if (vehiculeType === 'camion') {
+      return camionPositions;
+    }
+    
+    const selectedRemorque = remorques.find(r => r._id === selectedVehiculeId);
+    if (selectedRemorque?.nombreEssieux === 3) {
+      return remorque12Positions;
+    }
+    return remorque8Positions;
+  };
+
+  // Trouver le pneu à une position
+  const getPneuAtPosition = (position: string): Pneu | undefined => {
+    return pneus.find(p => p.position === position);
+  };
+
+  // Couleur selon le statut
+  const getStatutColor = (statut: string): string => {
+    switch (statut) {
+      case 'bon': return '#4caf50';
+      case 'usé': return '#ff9800';
+      case 'critique': return '#f44336';
+      default: return '#9e9e9e';
+    }
+  };
+
+  // Ouvrir le dialog pour ajouter/modifier
+  const handleOpenDialog = (position: string) => {
+    const existingPneu = getPneuAtPosition(position);
+    setSelectedPosition(position);
+    
+    if (existingPneu) {
+      setEditingPneu(existingPneu);
+      setFormData({
+        marque: existingPneu.marque,
+        kmInstallation: existingPneu.kmInstallation,
+        kmLimite: existingPneu.kmLimite,
+        statut: existingPneu.statut,
+      });
+    } else {
+      setEditingPneu(null);
+      setFormData({
+        marque: '',
+        kmInstallation: 0,
+        kmLimite: 50000,
+        statut: 'bon',
+      });
+    }
+    
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingPneu(null);
+    setSelectedPosition('');
+    setFormData({
+      marque: '',
+      kmInstallation: 0,
+      kmLimite: 50000,
+      statut: 'bon',
+    });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        vehiculeType,
+        vehiculeId: selectedVehiculeId,
+        position: selectedPosition,
+        ...formData,
+      };
+
+      if (editingPneu) {
+        await pneuAPI.update(editingPneu._id, data);
+      } else {
+        await pneuAPI.create(data);
+      }
+
+      handleCloseDialog();
+      loadPneus();
+    } catch (err) {
+      console.error('Erreur sauvegarde pneu:', err);
+      setError('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer ce pneu ?')) return;
+    
+    try {
+      await pneuAPI.delete(id);
+      loadPneus();
+    } catch (err) {
+      console.error('Erreur suppression:', err);
+      setError('Erreur lors de la suppression');
+    }
+  };
+
+  // Obtenir le nom du véhicule sélectionné
+  const getSelectedVehiculeName = (): string => {
+    if (!selectedVehiculeId) return '';
+    
+    if (vehiculeType === 'camion') {
+      const camion = camions.find(c => c._id === selectedVehiculeId);
+      return camion?.immatriculation || '';
+    } else {
+      const remorque = remorques.find(r => r._id === selectedVehiculeId);
+      return remorque?.immatriculation || '';
+    }
+  };
+
+  // Rendu d'un pneu graphique
+  const renderTireBox = (position: string) => {
+    const pneu = getPneuAtPosition(position);
+    const isEmpty = !pneu;
+    
     return (
-        <Box>
-            {/* Header */}
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 500, mb: 1, color: '#1a1a1a' }}>
-                        Gestion des pneus
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#666' }}>
-                        {pneus.length} pneu{pneus.length > 1 ? 's' : ''} enregistré{pneus.length > 1 ? 's' : ''}
-                    </Typography>
-                </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={() => handleOpenDialog()}
-                    sx={{ borderRadius: 2 }}
-                >
-                    Ajouter un pneu
-                </Button>
-            </Box>
-
-            {/* Content */}
-            {pneus.length === 0 ? (
-                <Card sx={{ border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
-                    <Box sx={{ p: 8, textAlign: 'center' }}>
-                        <TireRepair sx={{ fontSize: 64, color: '#ccc', mb: 2 }} />
-                        <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                            Aucun pneu enregistré
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Cliquez sur "Ajouter un pneu" pour commencer
-                        </Typography>
-                    </Box>
-                </Card>
-            ) : isMobile ? (
-                // Version mobile - Cards
-                <Stack spacing={2}>
-                    {pneus.map((pneu) => (
-                        <Card key={pneu._id} sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 3 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                <Box>
-                                    <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                                        {pneu.marque} - {pneu.position}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {pneu.vehiculeType === 'camion' ? 'Camion' : 'Remorque'}: {getVehiculeImmat(pneu.vehiculeId, pneu.vehiculeType)}
-                                    </Typography>
-                                </Box>
-                                <Chip
-                                    label={statutLabels[pneu.statut]}
-                                    color={statutColors[pneu.statut]}
-                                    size="small"
-                                    variant="outlined"
-                                />
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Km Installation</Typography>
-                                    <Typography variant="body2">{pneu.kmInstallation.toLocaleString()} km</Typography>
-                                </Box>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">Km Limite</Typography>
-                                    <Typography variant="body2">{pneu.kmLimite.toLocaleString()} km</Typography>
-                                </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                <IconButton size="small" onClick={() => handleOpenDialog(pneu)} color="primary">
-                                    <Edit />
-                                </IconButton>
-                                <IconButton size="small" onClick={() => handleDelete(pneu._id)} color="error">
-                                    <Delete />
-                                </IconButton>
-                            </Box>
-                        </Card>
-                    ))}
-                </Stack>
-            ) : (
-                // Version desktop - Table
-                <TableContainer component={Card} sx={{ border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                                <TableCell sx={{ fontWeight: 600 }}>Véhicule</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Position</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Marque</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Km Installation</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Km Limite</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Statut</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {pneus.map((pneu) => (
-                                <TableRow key={pneu._id} hover>
-                                    <TableCell sx={{ fontWeight: 500 }}>
-                                        {getVehiculeImmat(pneu.vehiculeId, pneu.vehiculeType)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip 
-                                            label={pneu.vehiculeType === 'camion' ? 'Camion' : 'Remorque'} 
-                                            size="small" 
-                                            variant="outlined"
-                                            color={pneu.vehiculeType === 'camion' ? 'primary' : 'secondary'}
-                                        />
-                                    </TableCell>
-                                    <TableCell>{pneu.position}</TableCell>
-                                    <TableCell>{pneu.marque}</TableCell>
-                                    <TableCell>{pneu.kmInstallation.toLocaleString()} km</TableCell>
-                                    <TableCell>{pneu.kmLimite.toLocaleString()} km</TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={statutLabels[pneu.statut]}
-                                            color={statutColors[pneu.statut]}
-                                            size="small"
-                                            variant="outlined"
-                                        />
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <IconButton size="small" onClick={() => handleOpenDialog(pneu)} color="primary">
-                                            <Edit />
-                                        </IconButton>
-                                        <IconButton size="small" onClick={() => handleDelete(pneu._id)} color="error">
-                                            <Delete />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
-
-            {/* Dialog Add/Edit */}
-            <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editingId ? 'Modifier le pneu' : 'Ajouter un pneu'}
-                </DialogTitle>
-                <DialogContent>
-                    <Stack spacing={3} sx={{ mt: 1 }}>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <FormControl fullWidth>
-                                <InputLabel>Type de véhicule</InputLabel>
-                                <Select
-                                    value={formData.vehiculeType}
-                                    label="Type de véhicule"
-                                    onChange={(e) => setFormData({ 
-                                        ...formData, 
-                                        vehiculeType: e.target.value as 'camion' | 'remorque',
-                                        vehiculeId: '' 
-                                    })}
-                                >
-                                    <MenuItem value="camion">Camion</MenuItem>
-                                    <MenuItem value="remorque">Remorque</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <FormControl fullWidth>
-                                <InputLabel>Véhicule</InputLabel>
-                                <Select
-                                    value={formData.vehiculeId}
-                                    label="Véhicule"
-                                    onChange={(e) => setFormData({ ...formData, vehiculeId: e.target.value })}
-                                >
-                                    {vehiculeOptions.map((v) => (
-                                        <MenuItem key={v._id} value={v._id}>
-                                            {v.immatriculation}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField
-                                label="Position"
-                                value={formData.position}
-                                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                                fullWidth
-                                required
-                                placeholder="Ex: Avant gauche, Arrière droit..."
-                            />
-                            <TextField
-                                label="Marque"
-                                value={formData.marque}
-                                onChange={(e) => setFormData({ ...formData, marque: e.target.value })}
-                                fullWidth
-                                required
-                            />
-                        </Box>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField
-                                label="Km Installation"
-                                type="number"
-                                value={formData.kmInstallation}
-                                onChange={(e) => setFormData({ ...formData, kmInstallation: parseInt(e.target.value) || 0 })}
-                                fullWidth
-                                required
-                            />
-                            <TextField
-                                label="Km Limite"
-                                type="number"
-                                value={formData.kmLimite}
-                                onChange={(e) => setFormData({ ...formData, kmLimite: parseInt(e.target.value) || 0 })}
-                                fullWidth
-                                required
-                            />
-                        </Box>
-                        <TextField
-                            label="Statut"
-                            select
-                            value={formData.statut}
-                            onChange={(e) => setFormData({ ...formData, statut: e.target.value as any })}
-                            fullWidth
-                        >
-                            <MenuItem value="bon">Bon état</MenuItem>
-                            <MenuItem value="use">Usé</MenuItem>
-                            <MenuItem value="a_changer">À changer</MenuItem>
-                        </TextField>
-                    </Stack>
-                </DialogContent>
-                <DialogActions sx={{ p: 2.5 }}>
-                    <Button onClick={handleCloseDialog} color="inherit">
-                        Annuler
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        disabled={saving || !formData.vehiculeId || !formData.position || !formData.marque}
-                    >
-                        {saving ? <CircularProgress size={20} /> : editingId ? 'Modifier' : 'Ajouter'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+      <Tooltip
+        key={position}
+        title={
+          pneu
+            ? `${position}: ${pneu.marque} - ${pneu.statut} (${pneu.kmInstallation} km)`
+            : `${position}: Vide - Cliquer pour ajouter`
+        }
+        arrow
+      >
+        <Paper
+          onClick={() => handleOpenDialog(position)}
+          sx={{
+            width: 70,
+            height: 35,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: isEmpty ? '#e0e0e0' : getStatutColor(pneu.statut),
+            color: isEmpty ? '#666' : '#fff',
+            cursor: 'pointer',
+            borderRadius: 1,
+            border: isEmpty ? '2px dashed #999' : 'none',
+            transition: 'all 0.2s',
+            '&:hover': {
+              transform: 'scale(1.05)',
+              boxShadow: 3,
+            },
+          }}
+        >
+          <Typography variant="caption" fontWeight="bold">
+            {position}
+          </Typography>
+        </Paper>
+      </Tooltip>
     );
+  };
+
+  // Rendu du camion
+  const renderCamion = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <Typography variant="subtitle2" color="text.secondary">AVANT</Typography>
+      
+      {/* Essieu avant */}
+      <Box sx={{ display: 'flex', gap: 4 }}>
+        {renderTireBox('AV-G')}
+        <Box sx={{ width: 80, height: 35, bgcolor: '#424242', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography variant="caption" color="white">Cabine</Typography>
+        </Box>
+        {renderTireBox('AV-D')}
+      </Box>
+
+      {/* Carrosserie */}
+      <Box sx={{ width: 200, height: 60, bgcolor: '#616161', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CamionIcon sx={{ color: 'white', fontSize: 40 }} />
+      </Box>
+
+      {/* Essieu AR1 */}
+      <Box sx={{ display: 'flex', gap: 4 }}>
+        {renderTireBox('AR1-G')}
+        <Box sx={{ width: 80, height: 35, bgcolor: '#424242', borderRadius: 1 }} />
+        {renderTireBox('AR1-D')}
+      </Box>
+
+      {/* Essieu AR2 */}
+      <Box sx={{ display: 'flex', gap: 4 }}>
+        {renderTireBox('AR2-G')}
+        <Box sx={{ width: 80, height: 35, bgcolor: '#424242', borderRadius: 1 }} />
+        {renderTireBox('AR2-D')}
+      </Box>
+
+      <Typography variant="subtitle2" color="text.secondary">ARRIÈRE</Typography>
+    </Box>
+  );
+
+  // Rendu d'un essieu de remorque
+  const renderRemorqueEssieu = (essieuNum: number) => (
+    <Box key={essieuNum} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
+        {renderTireBox(`E${essieuNum}-G1`)}
+        {renderTireBox(`E${essieuNum}-G2`)}
+      </Box>
+      <Box sx={{ width: 60, height: 35, bgcolor: '#424242', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="caption" color="white">E{essieuNum}</Typography>
+      </Box>
+      <Box sx={{ display: 'flex', gap: 0.5 }}>
+        {renderTireBox(`E${essieuNum}-D1`)}
+        {renderTireBox(`E${essieuNum}-D2`)}
+      </Box>
+    </Box>
+  );
+
+  // Rendu de la remorque
+  const renderRemorque = () => {
+    const selectedRemorque = remorques.find(r => r._id === selectedVehiculeId);
+    const nombreEssieux = selectedRemorque?.nombreEssieux || 2;
+    
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary">AVANT (Attelage)</Typography>
+        
+        {/* Attelage */}
+        <Box sx={{ width: 40, height: 30, bgcolor: '#757575', borderRadius: '50%' }} />
+        
+        {/* Corps de la remorque */}
+        <Box sx={{ width: 280, height: 80, bgcolor: '#616161', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <RemorqueIcon sx={{ color: 'white', fontSize: 50 }} />
+        </Box>
+
+        {/* Essieux */}
+        {Array.from({ length: nombreEssieux }, (_, i) => renderRemorqueEssieu(i + 1))}
+
+        <Typography variant="subtitle2" color="text.secondary">ARRIÈRE</Typography>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {/* En-tête */}
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography variant="h4" fontWeight="bold">
+          Gestion des Pneus
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Sélection du véhicule */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Sélectionner un véhicule
+        </Typography>
+        
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Type de véhicule */}
+          <ToggleButtonGroup
+            value={vehiculeType}
+            exclusive
+            onChange={(_, value) => {
+              if (value) {
+                setVehiculeType(value);
+                setSelectedVehiculeId('');
+                setPneus([]);
+              }
+            }}
+            size="small"
+          >
+            <ToggleButton value="camion">
+              <CamionIcon sx={{ mr: 1 }} />
+              Camion
+            </ToggleButton>
+            <ToggleButton value="remorque">
+              <RemorqueIcon sx={{ mr: 1 }} />
+              Remorque
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          {/* Sélection du véhicule spécifique */}
+          <FormControl sx={{ minWidth: 250 }}>
+            <InputLabel>
+              {vehiculeType === 'camion' ? 'Camion' : 'Remorque'}
+            </InputLabel>
+            <Select
+              value={selectedVehiculeId}
+              onChange={(e) => setSelectedVehiculeId(e.target.value)}
+              label={vehiculeType === 'camion' ? 'Camion' : 'Remorque'}
+            >
+              {(vehiculeType === 'camion' ? camions : remorques).map((v) => (
+                <MenuItem key={v._id} value={v._id}>
+                  {v.immatriculation}
+                  {v.nombreEssieux && ` (${v.nombreEssieux} essieux)`}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Paper>
+
+      {/* Légende */}
+      {selectedVehiculeId && (
+        <Box sx={{ mb: 2, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Chip label="Bon" sx={{ bgcolor: '#4caf50', color: 'white' }} />
+          <Chip label="Usé" sx={{ bgcolor: '#ff9800', color: 'white' }} />
+          <Chip label="Critique" sx={{ bgcolor: '#f44336', color: 'white' }} />
+          <Chip label="Vide" variant="outlined" />
+        </Box>
+      )}
+
+      {/* Visualisation */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : selectedVehiculeId ? (
+        <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            {getSelectedVehiculeName()}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Cliquez sur une position pour ajouter ou modifier un pneu
+          </Typography>
+          
+          {vehiculeType === 'camion' ? renderCamion() : renderRemorque()}
+          
+          {/* Résumé */}
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Pneus installés: {pneus.length} / {getPositions().length}
+            </Typography>
+          </Box>
+        </Paper>
+      ) : (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography color="text.secondary">
+            Sélectionnez un véhicule pour visualiser et gérer ses pneus
+          </Typography>
+        </Paper>
+      )}
+
+      {/* Liste des pneus (tableau récapitulatif) */}
+      {pneus.length > 0 && (
+        <Paper sx={{ mt: 3, p: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Liste des pneus installés
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {pneus.map((pneu) => (
+              <Chip
+                key={pneu._id}
+                label={`${pneu.position}: ${pneu.marque}`}
+                sx={{ bgcolor: getStatutColor(pneu.statut), color: 'white' }}
+                onDelete={() => handleDelete(pneu._id)}
+                onClick={() => handleOpenDialog(pneu.position)}
+              />
+            ))}
+          </Box>
+        </Paper>
+      )}
+
+      {/* Dialog Ajouter/Modifier */}
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingPneu ? 'Modifier le pneu' : 'Ajouter un pneu'}
+          <Typography variant="subtitle2" color="text.secondary">
+            Position: {selectedPosition} - {getSelectedVehiculeName()}
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <TextField
+              label="Marque"
+              value={formData.marque}
+              onChange={(e) => setFormData({ ...formData, marque: e.target.value })}
+              fullWidth
+              required
+            />
+            
+            <TextField
+              label="Km à l'installation"
+              type="number"
+              value={formData.kmInstallation}
+              onChange={(e) => setFormData({ ...formData, kmInstallation: Number(e.target.value) })}
+              fullWidth
+            />
+            
+            <TextField
+              label="Km limite"
+              type="number"
+              value={formData.kmLimite}
+              onChange={(e) => setFormData({ ...formData, kmLimite: Number(e.target.value) })}
+              fullWidth
+            />
+            
+            <FormControl fullWidth>
+              <InputLabel>Statut</InputLabel>
+              <Select
+                value={formData.statut}
+                onChange={(e) => setFormData({ ...formData, statut: e.target.value as 'bon' | 'usé' | 'critique' })}
+                label="Statut"
+              >
+                <MenuItem value="bon">Bon</MenuItem>
+                <MenuItem value="usé">Usé</MenuItem>
+                <MenuItem value="critique">Critique</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          {editingPneu && (
+            <Button 
+              color="error" 
+              onClick={() => {
+                handleDelete(editingPneu._id);
+                handleCloseDialog();
+              }}
+              startIcon={<DeleteIcon />}
+            >
+              Supprimer
+            </Button>
+          )}
+          <Box sx={{ flex: 1 }} />
+          <Button onClick={handleCloseDialog}>Annuler</Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            disabled={!formData.marque}
+          >
+            {editingPneu ? 'Modifier' : 'Ajouter'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 };
 
 export default Pneus;

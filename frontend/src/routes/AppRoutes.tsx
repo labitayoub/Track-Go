@@ -29,7 +29,6 @@ const AppRoutes = () => {
                 <Route path="/remorques" element={<Remorques />} />
                 <Route path="/trajets" element={<Trajets />} />
                 <Route path="/pneus" element={<Pneus />} />
-                <Route path="/maintenance" element={<Dashboard />} />
                 <Route path="/chauffeurs" element={<Chauffeurs />} />
             </Route>
 
