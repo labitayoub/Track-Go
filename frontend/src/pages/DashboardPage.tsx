@@ -16,7 +16,6 @@ import {
     CircularProgress,
     Card,
     CardContent,
-    Grid,
     List,
     ListItem,
     ListItemIcon,
@@ -27,8 +26,6 @@ import {
     LocalShipping,
     Route,
     DirectionsCar,
-    TrendingUp,
-    CheckCircle,
 } from '@mui/icons-material';
 
 interface Chauffeur {
@@ -39,37 +36,6 @@ interface Chauffeur {
     isActive: boolean;
     createdAt: string;
 }
-
-// Stat Card Component
-const StatCard = ({ title, value, icon, color }: { title: string; value: string | number; icon: React.ReactNode; color: string }) => (
-    <Card elevation={0} sx={{ border: '1px solid #e2e8f0', height: '100%' }}>
-        <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box>
-                    <Typography variant="body2" sx={{ color: '#64748b', mb: 1 }}>
-                        {title}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                        {value}
-                    </Typography>
-                </Box>
-                <Box
-                    sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 2,
-                        bgcolor: color,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    {icon}
-                </Box>
-            </Box>
-        </CardContent>
-    </Card>
-);
 
 const DashboardPage = () => {
     const { user } = useAuth();
@@ -102,66 +68,24 @@ const DashboardPage = () => {
         }
     };
 
-    const activeCount = chauffeurs.filter(c => c.isActive).length;
-
     return (
         <Box>
-            {/* Welcome Message */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                    Bienvenue, {user?.nom} 👋
-                </Typography>
-                <Typography variant="body1" sx={{ color: '#64748b' }}>
-                    {user?.role === 'admin'
-                        ? 'Gérez votre flotte et vos chauffeurs depuis ce tableau de bord.'
-                        : 'Consultez vos trajets et informations véhicule.'}
-                </Typography>
-            </Box>
+            {/* Welcome */}
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                Bienvenue, {user?.nom}
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                {user?.role === 'admin'
+                    ? 'Gérez vos chauffeurs et votre flotte'
+                    : 'Consultez vos trajets et véhicules'}
+            </Typography>
 
-            {/* Admin Stats Cards */}
+            {/* Admin Content */}
             {user?.role === 'admin' && (
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <StatCard
-                            title="Total Chauffeurs"
-                            value={chauffeurs.length}
-                            icon={<People sx={{ color: 'white' }} />}
-                            color="#3b82f6"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <StatCard
-                            title="Chauffeurs Actifs"
-                            value={activeCount}
-                            icon={<CheckCircle sx={{ color: 'white' }} />}
-                            color="#22c55e"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <StatCard
-                            title="Camions"
-                            value="--"
-                            icon={<LocalShipping sx={{ color: 'white' }} />}
-                            color="#f59e0b"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <StatCard
-                            title="Trajets ce mois"
-                            value="--"
-                            icon={<TrendingUp sx={{ color: 'white' }} />}
-                            color="#8b5cf6"
-                        />
-                    </Grid>
-                </Grid>
-            )}
-
-            {/* Admin Content - Chauffeurs Table */}
-            {user?.role === 'admin' && (
-                <Paper elevation={0} sx={{ p: 3, border: '1px solid #e2e8f0' }}>
+                <Paper elevation={2} sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                        <People sx={{ color: '#3b82f6' }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                        <People color="primary" />
+                        <Typography variant="h5" fontWeight="600">
                             Gestion des Chauffeurs
                         </Typography>
                     </Box>
@@ -171,54 +95,40 @@ const DashboardPage = () => {
                             <CircularProgress />
                         </Box>
                     ) : chauffeurs.length === 0 ? (
-                        <Box sx={{ textAlign: 'center', py: 6 }}>
-                            <People sx={{ fontSize: 48, color: '#cbd5e1', mb: 2 }} />
-                            <Typography sx={{ color: '#64748b' }}>
-                                Aucun chauffeur inscrit
-                            </Typography>
-                        </Box>
+                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                            Aucun chauffeur inscrit
+                        </Typography>
                     ) : (
                         <TableContainer>
                             <Table>
                                 <TableHead>
-                                    <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                        <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Nom</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Email</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: '#475569' }}>Téléphone</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: '#475569' }} align="center">Statut</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, color: '#475569' }} align="center">Action</TableCell>
+                                    <TableRow sx={{ bgcolor: '#1976d2' }}>
+                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Nom</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Email</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Téléphone</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Statut</TableCell>
+                                        <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Action</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {chauffeurs.map((c) => (
                                         <TableRow key={c._id} hover>
-                                            <TableCell sx={{ fontWeight: 500 }}>{c.nom}</TableCell>
-                                            <TableCell sx={{ color: '#64748b' }}>{c.email}</TableCell>
-                                            <TableCell sx={{ color: '#64748b' }}>{c.telephone}</TableCell>
+                                            <TableCell>{c.nom}</TableCell>
+                                            <TableCell>{c.email}</TableCell>
+                                            <TableCell>{c.telephone}</TableCell>
                                             <TableCell align="center">
                                                 <Chip
                                                     label={c.isActive ? 'Actif' : 'Inactif'}
+                                                    color={c.isActive ? 'success' : 'error'}
                                                     size="small"
-                                                    sx={{
-                                                        bgcolor: c.isActive ? '#dcfce7' : '#fee2e2',
-                                                        color: c.isActive ? '#16a34a' : '#dc2626',
-                                                        fontWeight: 500,
-                                                    }}
                                                 />
                                             </TableCell>
                                             <TableCell align="center">
                                                 <Button
-                                                    variant="outlined"
+                                                    variant="contained"
                                                     size="small"
+                                                    color={c.isActive ? 'warning' : 'success'}
                                                     onClick={() => toggleStatus(c._id)}
-                                                    sx={{
-                                                        textTransform: 'none',
-                                                        borderColor: c.isActive ? '#fbbf24' : '#22c55e',
-                                                        color: c.isActive ? '#d97706' : '#16a34a',
-                                                        '&:hover': {
-                                                            bgcolor: c.isActive ? '#fffbeb' : '#f0fdf4',
-                                                        },
-                                                    }}
                                                 >
                                                     {c.isActive ? 'Désactiver' : 'Activer'}
                                                 </Button>
@@ -234,69 +144,36 @@ const DashboardPage = () => {
 
             {/* Chauffeur Content */}
             {user?.role === 'chauffeur' && (
-                <Grid container spacing={3}>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Card elevation={0} sx={{ border: '1px solid #e2e8f0', height: '100%' }}>
-                            <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                                    <Route sx={{ color: '#3b82f6' }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                                        Mes Trajets
-                                    </Typography>
-                                </Box>
-                                <List disablePadding>
-                                    <ListItem
-                                        sx={{
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: 2,
-                                            mb: 1,
-                                            '&:hover': { bgcolor: '#f8fafc' },
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        <ListItemIcon>
-                                            <Route sx={{ color: '#22c55e' }} />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary="Voir tous mes trajets"
-                                            secondary="Consultez l'historique de vos trajets"
-                                        />
-                                    </ListItem>
-                                </List>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 6 }}>
-                        <Card elevation={0} sx={{ border: '1px solid #e2e8f0', height: '100%' }}>
-                            <CardContent sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                                    <DirectionsCar sx={{ color: '#22c55e' }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                                        Mon Véhicule
-                                    </Typography>
-                                </Box>
-                                <List disablePadding>
-                                    <ListItem
-                                        sx={{
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: 2,
-                                            '&:hover': { bgcolor: '#f8fafc' },
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        <ListItemIcon>
-                                            <LocalShipping sx={{ color: '#f59e0b' }} />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primary="Informations véhicule"
-                                            secondary="Détails de votre véhicule assigné"
-                                        />
-                                    </ListItem>
-                                </List>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                <Card elevation={2}>
+                    <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <LocalShipping color="success" />
+                            <Typography variant="h5" fontWeight="600">
+                                Espace Chauffeur
+                            </Typography>
+                        </Box>
+                        <List>
+                            <ListItem sx={{ '&:hover': { bgcolor: '#f5f5f5' }, borderRadius: 1, cursor: 'pointer' }}>
+                                <ListItemIcon>
+                                    <Route color="primary" />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary="Mes trajets"
+                                    secondary="Consultez et gérez vos trajets"
+                                />
+                            </ListItem>
+                            <ListItem sx={{ '&:hover': { bgcolor: '#f5f5f5' }, borderRadius: 1, cursor: 'pointer' }}>
+                                <ListItemIcon>
+                                    <DirectionsCar color="success" />
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary="Mon véhicule"
+                                    secondary="Informations sur votre véhicule assigné"
+                                />
+                            </ListItem>
+                        </List>
+                    </CardContent>
+                </Card>
             )}
         </Box>
     );
