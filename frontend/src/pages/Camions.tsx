@@ -54,13 +54,13 @@ const statutLabels: Record<string, string> = {
     maintenance: 'Maintenance',
 };
 
-const initialFormState = {
+const initialFormState: Omit<Camion, '_id' | 'createdAt'> = {
     immatriculation: '',
     marque: '',
     modele: '',
     annee: new Date().getFullYear(),
     kilometrage: 0,
-    statut: 'disponible' as const,
+    statut: 'disponible',
 };
 
 const Camions = () => {
