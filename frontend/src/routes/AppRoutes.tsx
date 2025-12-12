@@ -7,6 +7,7 @@ import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
 import Chauffeurs from '../pages/Chauffeurs';
 import Camions from '../pages/Camions';
+import Remorques from '../pages/Remorques';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -23,7 +24,7 @@ const AppRoutes = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 {/* Pages CRUD */}
                 <Route path="/camions" element={<Camions />} />
-                <Route path="/remorques" element={<Dashboard />} />
+                <Route path="/remorques" element={<Remorques />} />
                 <Route path="/trajets" element={<Dashboard />} />
                 <Route path="/pneus" element={<Dashboard />} />
                 <Route path="/maintenance" element={<Dashboard />} />
