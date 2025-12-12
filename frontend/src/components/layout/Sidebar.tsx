@@ -33,12 +33,12 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+    { label: 'Chauffeurs', path: '/chauffeurs', icon: <People />, adminOnly: true },
     { label: 'Camions', path: '/camions', icon: <LocalShipping />, adminOnly: true },
     { label: 'Remorques', path: '/remorques', icon: <RvHookup />, adminOnly: true },
-    { label: 'Trajets', path: '/trajets', icon: <Route /> },
     { label: 'Pneus', path: '/pneus', icon: <TireRepair />, adminOnly: true },
+    { label: 'Trajets', path: '/trajets', icon: <Route /> },
     { label: 'Maintenance', path: '/maintenance', icon: <Build />, adminOnly: true },
-    { label: 'Chauffeurs', path: '/chauffeurs', icon: <People />, adminOnly: true },
 ];
 
 const Sidebar = () => {
