@@ -1,24 +1,9 @@
 import { useAuth } from '../context/AuthContext';
-import {
-    Box,
-    Button,
-    Typography,
-    Card,
-    Avatar,
-} from '@mui/material';
-import {
-    People,
-    LocalShipping,
-    Route,
-    DirectionsCar,
-    Warning,
-} from '@mui/icons-material';
-
-
+import { Box, Typography, Card, Avatar, Button } from '@mui/material';
+import { People, LocalShipping, Route, DirectionsCar, Warning } from '@mui/icons-material';
 
 const Dashboard = () => {
     const { user } = useAuth();
-
 
     return (
         <Box sx={{ p: 0 }}>
@@ -142,7 +127,5 @@ const Dashboard = () => {
         </Box>
     );
 };
-
-
 
 export default Dashboard;
