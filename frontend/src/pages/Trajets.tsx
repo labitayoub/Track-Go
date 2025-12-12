@@ -56,8 +56,7 @@ interface Trajet {
     arrivee: string;
     dateDepart: string;
     dateArrivee?: string;
-    kmDepart: number;
-    kmArrivee?: number;
+    kilometrage: number;
     gasoil?: number;
     statut: 'a_faire' | 'en_cours' | 'termine';
     remarques?: string;
@@ -99,8 +98,7 @@ const initialFormState = {
     arrivee: '',
     dateDepart: '',
     dateArrivee: '',
-    kmDepart: 0,
-    kmArrivee: 0,
+    kilometrage: 0,
     gasoil: 0,
     statut: 'a_faire' as 'a_faire' | 'en_cours' | 'termine',
     remarques: '',
@@ -190,8 +188,7 @@ const Trajets = () => {
                 arrivee: trajet.arrivee,
                 dateDepart: trajet.dateDepart ? trajet.dateDepart.slice(0, 16) : '',
                 dateArrivee: trajet.dateArrivee ? trajet.dateArrivee.slice(0, 16) : '',
-                kmDepart: trajet.kmDepart,
-                kmArrivee: trajet.kmArrivee || 0,
+                kilometrage: trajet.kilometrage,
                 gasoil: trajet.gasoil || 0,
                 statut: trajet.statut,
                 remarques: trajet.remarques || '',
@@ -216,7 +213,6 @@ const Trajets = () => {
                 ...formData,
                 remorqueId: formData.remorqueId || undefined,
                 dateArrivee: formData.dateArrivee || undefined,
-                kmArrivee: formData.kmArrivee || undefined,
                 gasoil: formData.gasoil || undefined,
                 remarques: formData.remarques || undefined,
             };
@@ -339,8 +335,8 @@ const Trajets = () => {
                                     </Typography>
                                 </Box>
                                 <Box>
-                                    <Typography variant="caption" color="text.secondary">Km Départ</Typography>
-                                    <Typography variant="body2">{trajet.kmDepart.toLocaleString()} km</Typography>
+                                    <Typography variant="caption" color="text.secondary">Kilométrage</Typography>
+                                    <Typography variant="body2">{trajet.kilometrage.toLocaleString()} km</Typography>
                                 </Box>
                                 {trajet.gasoil && (
                                     <Box>
@@ -383,7 +379,7 @@ const Trajets = () => {
                                 <TableCell sx={{ fontWeight: 600 }}>Camion</TableCell>
                                 <TableCell sx={{ fontWeight: 600 }}>Remorque</TableCell>
                                 <TableCell sx={{ fontWeight: 600 }}>Date départ</TableCell>
-                                <TableCell sx={{ fontWeight: 600 }}>Km</TableCell>
+                                <TableCell sx={{ fontWeight: 600 }}>Kilométrage</TableCell>
                                 <TableCell sx={{ fontWeight: 600 }}>Statut</TableCell>
                                 <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
                             </TableRow>
@@ -400,7 +396,7 @@ const Trajets = () => {
                                     <TableCell>
                                         {new Date(trajet.dateDepart).toLocaleDateString('fr-FR')}
                                     </TableCell>
-                                    <TableCell>{trajet.kmDepart.toLocaleString()}</TableCell>
+                                    <TableCell>{trajet.kilometrage.toLocaleString()} km</TableCell>
                                     <TableCell>
                                         <Chip
                                             label={statutLabels[trajet.statut]}
@@ -521,19 +517,12 @@ const Trajets = () => {
                         </Box>
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <TextField
-                                label="Km Départ"
+                                label="Kilométrage"
                                 type="number"
-                                value={formData.kmDepart}
-                                onChange={(e) => setFormData({ ...formData, kmDepart: parseInt(e.target.value) || 0 })}
+                                value={formData.kilometrage}
+                                onChange={(e) => setFormData({ ...formData, kilometrage: parseInt(e.target.value) || 0 })}
                                 fullWidth
                                 required
-                            />
-                            <TextField
-                                label="Km Arrivée"
-                                type="number"
-                                value={formData.kmArrivee}
-                                onChange={(e) => setFormData({ ...formData, kmArrivee: parseInt(e.target.value) || 0 })}
-                                fullWidth
                             />
                             <TextField
                                 label="Gasoil (L)"

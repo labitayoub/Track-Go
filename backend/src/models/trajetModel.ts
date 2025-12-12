@@ -8,8 +8,7 @@ export interface ITrajet extends Document {
     arrivee: string;
     dateDepart: Date;
     dateArrivee?: Date;
-    kmDepart: number;
-    kmArrivee?: number;
+    kilometrage: number;
     gasoil?: number;
     statut: 'a_faire' | 'en_cours' | 'termine';
     remarques?: string;
@@ -23,8 +22,7 @@ const trajetSchema = new Schema<ITrajet>({
     arrivee: { type: String, required: true },
     dateDepart: { type: Date, required: true },
     dateArrivee: Date,
-    kmDepart: { type: Number, required: true },
-    kmArrivee: Number,
+    kilometrage: { type: Number, required: true },
     gasoil: Number,
     statut: { 
         type: String, 
