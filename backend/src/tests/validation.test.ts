@@ -1,4 +1,4 @@
-import { registerSchema, loginSchema } from '../validators/userValidator';
+import { registerSchema, loginSchema } from '../validators/userValidator.js';
 
 describe('Validation Joi', () => {
     
