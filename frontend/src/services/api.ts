@@ -76,4 +76,14 @@ export const pneuAPI = {
     delete: (id: string) => api.delete(`/pneu/${id}`),
 };
 
+// API Trajets
+export const trajetAPI = {
+    getAll: () => api.get('/trajet'),
+    getMyTrajets: () => api.get('/trajet/mes-trajets'),
+    getById: (id: string) => api.get(`/trajet/${id}`),
+    create: (data: any) => api.post('/trajet', data),
+    update: (id: string, data: any) => api.put(`/trajet/${id}`, data),
+    delete: (id: string) => api.delete(`/trajet/${id}`),
+};
+
 export default api;
