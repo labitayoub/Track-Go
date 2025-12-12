@@ -4,14 +4,13 @@ export interface ITrajet extends Document {
     chauffeurId: mongoose.Types.ObjectId;
     camionId: mongoose.Types.ObjectId;
     remorqueId?: mongoose.Types.ObjectId;
-    pointDepart: string;
-    pointArrivee: string;
+    depart: string;
+    arrivee: string;
     dateDepart: Date;
     dateArrivee?: Date;
-    kilometrageDepart?: number;
-    kilometrageArrivee?: number;
-    carburantDepart?: number;
-    carburantArrivee?: number;
+    kmDepart: number;
+    kmArrivee?: number;
+    gasoil?: number;
     statut: 'a_faire' | 'en_cours' | 'termine';
     remarques?: string;
 }
@@ -20,14 +19,13 @@ const trajetSchema = new Schema<ITrajet>({
     chauffeurId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     camionId: { type: Schema.Types.ObjectId, ref: 'Camion', required: true },
     remorqueId: { type: Schema.Types.ObjectId, ref: 'Remorque' },
-    pointDepart: { type: String, required: true },
-    pointArrivee: { type: String, required: true },
+    depart: { type: String, required: true },
+    arrivee: { type: String, required: true },
     dateDepart: { type: Date, required: true },
     dateArrivee: Date,
-    kilometrageDepart: Number,
-    kilometrageArrivee: Number,
-    carburantDepart: Number,
-    carburantArrivee: Number,
+    kmDepart: { type: Number, required: true },
+    kmArrivee: Number,
+    gasoil: Number,
     statut: { 
         type: String, 
         enum: ['a_faire', 'en_cours', 'termine'], 
