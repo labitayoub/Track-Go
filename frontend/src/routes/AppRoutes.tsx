@@ -4,7 +4,7 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { DashboardLayout } from '../components/layout';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
-import DashboardPage from '../pages/DashboardPage';
+import Dashboard from '../pages/Dashboard';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -18,14 +18,14 @@ const AppRoutes = () => {
 
             {/* Routes protégées avec Layout */}
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 {/* Pages CRUD - à implémenter */}
-                <Route path="/camions" element={<DashboardPage />} />
-                <Route path="/remorques" element={<DashboardPage />} />
-                <Route path="/trajets" element={<DashboardPage />} />
-                <Route path="/pneus" element={<DashboardPage />} />
-                <Route path="/maintenance" element={<DashboardPage />} />
-                <Route path="/chauffeurs" element={<DashboardPage />} />
+                <Route path="/camions" element={<Dashboard />} />
+                <Route path="/remorques" element={<Dashboard />} />
+                <Route path="/trajets" element={<Dashboard />} />
+                <Route path="/pneus" element={<Dashboard />} />
+                <Route path="/maintenance" element={<Dashboard />} />
+                <Route path="/chauffeurs" element={<Dashboard />} />
             </Route>
 
             {/* Redirection racine */}
