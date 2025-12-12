@@ -6,6 +6,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
 import Chauffeurs from '../pages/Chauffeurs';
+import Camions from '../pages/Camions';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -20,8 +21,8 @@ const AppRoutes = () => {
             {/* Routes protégées avec Layout */}
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                {/* Pages CRUD - à implémenter */}
-                <Route path="/camions" element={<Dashboard />} />
+                {/* Pages CRUD */}
+                <Route path="/camions" element={<Camions />} />
                 <Route path="/remorques" element={<Dashboard />} />
                 <Route path="/trajets" element={<Dashboard />} />
                 <Route path="/pneus" element={<Dashboard />} />

@@ -47,4 +47,13 @@ export const adminAPI = {
         api.patch(`/user/chauffeurs/${id}/toggle`),
 };
 
+// API Camions
+export const camionAPI = {
+    getAll: () => api.get('/camion'),
+    getById: (id: string) => api.get(`/camion/${id}`),
+    create: (data: any) => api.post('/camion', data),
+    update: (id: string, data: any) => api.put(`/camion/${id}`, data),
+    delete: (id: string) => api.delete(`/camion/${id}`),
+};
+
 export default api;
