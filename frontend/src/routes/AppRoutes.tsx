@@ -5,6 +5,7 @@ import { DashboardLayout } from '../components/layout';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Dashboard from '../pages/Dashboard';
+import Chauffeurs from '../pages/Chauffeurs';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -25,7 +26,7 @@ const AppRoutes = () => {
                 <Route path="/trajets" element={<Dashboard />} />
                 <Route path="/pneus" element={<Dashboard />} />
                 <Route path="/maintenance" element={<Dashboard />} />
-                <Route path="/chauffeurs" element={<Dashboard />} />
+                <Route path="/chauffeurs" element={<Chauffeurs />} />
             </Route>
 
             {/* Redirection racine */}

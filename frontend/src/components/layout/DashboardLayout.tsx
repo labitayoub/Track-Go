@@ -2,11 +2,10 @@ import { Box, Toolbar } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import Sidebar, { DRAWER_WIDTH } from './Sidebar';
 import Navbar from './Navbar';
-import Footer from './Footer';
 
 const DashboardLayout = () => {
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f1f5f9' }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#fafafa' }}>
             {/* Sidebar */}
             <Sidebar />
 
@@ -27,16 +26,13 @@ const DashboardLayout = () => {
                     component="main"
                     sx={{
                         flexGrow: 1,
-                        p: 3,
-                        mt: 8, // Offset for fixed AppBar
+                        p: 4,
+                        mt: 8,
+                        minHeight: 'calc(100vh - 64px)',
                     }}
                 >
-                    <Toolbar /> {/* Spacer */}
                     <Outlet />
                 </Box>
-
-                {/* Footer */}
-                <Footer />
             </Box>
         </Box>
     );

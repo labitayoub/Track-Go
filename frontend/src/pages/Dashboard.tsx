@@ -1,182 +1,166 @@
 import { useAuth } from '../context/AuthContext';
-import { useState, useEffect } from 'react';
-import { adminAPI } from '../services/api';
 import {
     Box,
     Button,
     Typography,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Chip,
-    CircularProgress,
     Card,
-    CardContent,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
+    Grid,
+    Avatar,
 } from '@mui/material';
 import {
     People,
     LocalShipping,
     Route,
     DirectionsCar,
+    TrendingUp,
+    Warning,
 } from '@mui/icons-material';
 
-interface Chauffeur {
-    _id: string;
-    nom: string;
-    email: string;
-    telephone: string;
-    isActive: boolean;
-    createdAt: string;
-}
+
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const [chauffeurs, setChauffeurs] = useState<Chauffeur[]>([]);
-    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (user?.role === 'admin') {
-            loadChauffeurs();
-        }
-    }, [user]);
-
-    const loadChauffeurs = async () => {
-        setLoading(true);
-        try {
-            const res = await adminAPI.getChauffeurs();
-            setChauffeurs(res.data.chauffeurs);
-        } catch (error) {
-            console.error('Erreur chargement chauffeurs');
-        }
-        setLoading(false);
-    };
-
-    const toggleStatus = async (id: string) => {
-        try {
-            await adminAPI.toggleChauffeurStatus(id);
-            loadChauffeurs();
-        } catch (error) {
-            console.error('Erreur toggle status');
-        }
-    };
 
     return (
-        <Box>
-            {/* Welcome */}
-            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
-                Bienvenue, {user?.nom}
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                {user?.role === 'admin'
-                    ? 'Gérez vos chauffeurs et votre flotte'
-                    : 'Consultez vos trajets et véhicules'}
-            </Typography>
+        <Box sx={{ p: 0 }}>
+            {/* Header */}
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h3" sx={{ fontWeight: 300, mb: 1, color: '#1a1a1a' }}>
+                    Bonjour, {user?.nom}
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
+                    {user?.role === 'admin' ? 'Tableau de bord administrateur' : 'Votre espace de travail'}
+                </Typography>
+            </Box>
+
+            {/* Stats Cards */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2', width: 48, height: 48 }}>
+                                <LocalShipping />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 600, color: '#1a1a1a' }}>12</Typography>
+                                <Typography variant="body2" color="text.secondary">Camions</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', width: 48, height: 48 }}>
+                                <People />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 600, color: '#1a1a1a' }}>8</Typography>
+                                <Typography variant="body2" color="text.secondary">Chauffeurs</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: '#fff3e0', color: '#f57c00', width: 48, height: 48 }}>
+                                <Route />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 600, color: '#1a1a1a' }}>24</Typography>
+                                <Typography variant="body2" color="text.secondary">Trajets actifs</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ bgcolor: '#fce4ec', color: '#c2185b', width: 48, height: 48 }}>
+                                <Warning />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 600, color: '#1a1a1a' }}>3</Typography>
+                                <Typography variant="body2" color="text.secondary">Alertes</Typography>
+                            </Box>
+                        </Box>
+                    </Card>
+                </Grid>
+            </Grid>
 
             {/* Admin Content */}
             {user?.role === 'admin' && (
-                <Paper elevation={2} sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                        <People color="primary" />
-                        <Typography variant="h5" fontWeight="600">
-                            Gestion des Chauffeurs
-                        </Typography>
-                    </Box>
-
-                    {loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : chauffeurs.length === 0 ? (
-                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                            Aucun chauffeur inscrit
-                        </Typography>
-                    ) : (
-                        <TableContainer>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ bgcolor: '#1976d2' }}>
-                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Nom</TableCell>
-                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Email</TableCell>
-                                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Téléphone</TableCell>
-                                        <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Statut</TableCell>
-                                        <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Action</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {chauffeurs.map((c) => (
-                                        <TableRow key={c._id} hover>
-                                            <TableCell>{c.nom}</TableCell>
-                                            <TableCell>{c.email}</TableCell>
-                                            <TableCell>{c.telephone}</TableCell>
-                                            <TableCell align="center">
-                                                <Chip
-                                                    label={c.isActive ? 'Actif' : 'Inactif'}
-                                                    color={c.isActive ? 'success' : 'error'}
-                                                    size="small"
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">
-                                                <Button
-                                                    variant="contained"
-                                                    size="small"
-                                                    color={c.isActive ? 'warning' : 'success'}
-                                                    onClick={() => toggleStatus(c._id)}
-                                                >
-                                                    {c.isActive ? 'Désactiver' : 'Activer'}
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </Paper>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3, height: '100%' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                                    <LocalShipping />
+                                </Avatar>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Gestion de flotte</Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Gérez vos camions, remorques et maintenance
+                            </Typography>
+                            <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir la flotte</Button>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3, height: '100%' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Avatar sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}>
+                                    <People />
+                                </Avatar>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Équipe</Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Gérez vos chauffeurs et leurs affectations
+                            </Typography>
+                            <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir les chauffeurs</Button>
+                        </Card>
+                    </Grid>
+                </Grid>
             )}
 
             {/* Chauffeur Content */}
             {user?.role === 'chauffeur' && (
-                <Card elevation={2}>
-                    <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <LocalShipping color="success" />
-                            <Typography variant="h5" fontWeight="600">
-                                Espace Chauffeur
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3, height: '100%' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                                    <Route />
+                                </Avatar>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Mes trajets</Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Consultez et gérez vos trajets assignés
                             </Typography>
-                        </Box>
-                        <List>
-                            <ListItem sx={{ '&:hover': { bgcolor: '#f5f5f5' }, borderRadius: 1, cursor: 'pointer' }}>
-                                <ListItemIcon>
-                                    <Route color="primary" />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary="Mes trajets"
-                                    secondary="Consultez et gérez vos trajets"
-                                />
-                            </ListItem>
-                            <ListItem sx={{ '&:hover': { bgcolor: '#f5f5f5' }, borderRadius: 1, cursor: 'pointer' }}>
-                                <ListItemIcon>
-                                    <DirectionsCar color="success" />
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary="Mon véhicule"
-                                    secondary="Informations sur votre véhicule assigné"
-                                />
-                            </ListItem>
-                        </List>
-                    </CardContent>
-                </Card>
+                            <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir les trajets</Button>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3, height: '100%' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                                <Avatar sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}>
+                                    <DirectionsCar />
+                                </Avatar>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Mon véhicule</Typography>
+                            </Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Informations sur votre véhicule assigné
+                            </Typography>
+                            <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir le véhicule</Button>
+                        </Card>
+                    </Grid>
+                </Grid>
             )}
         </Box>
     );
 };
+
+
 
 export default Dashboard;

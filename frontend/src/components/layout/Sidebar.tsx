@@ -9,7 +9,7 @@ import {
     ListItemIcon,
     ListItemText,
     Typography,
-    Divider,
+    Avatar,
 } from '@mui/material';
 import {
     Dashboard,
@@ -21,7 +21,7 @@ import {
     People,
 } from '@mui/icons-material';
 
-const DRAWER_WIDTH = 260;
+const DRAWER_WIDTH = 280;
 
 interface MenuItem {
     label: string;
@@ -61,59 +61,67 @@ const Sidebar = () => {
                 '& .MuiDrawer-paper': {
                     width: DRAWER_WIDTH,
                     boxSizing: 'border-box',
-                    bgcolor: '#1e293b',
-                    color: 'white',
-                    borderRight: 'none',
+                    bgcolor: '#ffffff',
+                    borderRight: '1px solid #e0e0e0',
+                    boxShadow: '0 0 20px rgba(0,0,0,0.05)',
                 },
             }}
         >
             {/* Logo */}
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    px: 3,
-                    py: 3,
-                }}
-            >
-                <LocalShipping sx={{ fontSize: 36, color: '#3b82f6' }} />
-                <Box>
-                    <Typography
-                        variant="h5"
-                        sx={{ fontWeight: 700, letterSpacing: 1, color: 'white' }}
-                    >
-                        Track Go
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                        Gestion de Flotte
-                    </Typography>
+            <Box sx={{ p: 3, borderBottom: '1px solid #f0f0f0' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Avatar sx={{ bgcolor: '#1976d2', width: 40, height: 40 }}>
+                        <LocalShipping sx={{ fontSize: 20 }} />
+                    </Avatar>
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                            Track Go
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#666' }}>
+                            Gestion de flotte
+                        </Typography>
+                    </Box>
+                </Box>
+                
+                {/* User info */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 2 }}>
+                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#e3f2fd', color: '#1976d2', fontSize: '0.875rem' }}>
+                        {user?.nom?.charAt(0)}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#1a1a1a', truncate: true }}>
+                            {user?.nom}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#666', textTransform: 'capitalize' }}>
+                            {user?.role}
+                        </Typography>
+                    </Box>
                 </Box>
             </Box>
 
-            <Divider sx={{ borderColor: '#334155', mx: 2 }} />
-
             {/* Navigation */}
-            <List sx={{ px: 2, py: 2 }}>
+            <List sx={{ px: 2, py: 3 }}>
                 {filteredMenuItems.map((item) => {
                     const isActive = location.pathname === item.path;
                     return (
-                        <ListItem key={item.path} disablePadding sx={{ mb: 0.5 }}>
+                        <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
                             <ListItemButton
                                 onClick={() => navigate(item.path)}
                                 sx={{
-                                    borderRadius: 2,
+                                    borderRadius: 3,
                                     py: 1.5,
-                                    bgcolor: isActive ? '#3b82f6' : 'transparent',
+                                    px: 2,
+                                    bgcolor: isActive ? '#f0f7ff' : 'transparent',
+                                    border: isActive ? '1px solid #e3f2fd' : '1px solid transparent',
                                     '&:hover': {
-                                        bgcolor: isActive ? '#3b82f6' : '#334155',
+                                        bgcolor: isActive ? '#f0f7ff' : '#f8f9fa',
                                     },
                                 }}
                             >
                                 <ListItemIcon
                                     sx={{
-                                        color: isActive ? 'white' : '#94a3b8',
-                                        minWidth: 40,
+                                        color: isActive ? '#1976d2' : '#666',
+                                        minWidth: 36,
                                     }}
                                 >
                                     {item.icon}
@@ -121,8 +129,9 @@ const Sidebar = () => {
                                 <ListItemText
                                     primary={item.label}
                                     primaryTypographyProps={{
-                                        fontWeight: isActive ? 600 : 400,
-                                        fontSize: '0.95rem',
+                                        fontWeight: isActive ? 500 : 400,
+                                        fontSize: '0.9rem',
+                                        color: isActive ? '#1976d2' : '#1a1a1a',
                                     }}
                                 />
                             </ListItemButton>
@@ -130,14 +139,6 @@ const Sidebar = () => {
                     );
                 })}
             </List>
-
-            {/* Footer info */}
-            <Box sx={{ mt: 'auto', p: 2 }}>
-                <Divider sx={{ borderColor: '#334155', mb: 2 }} />
-                <Typography variant="caption" sx={{ color: '#64748b', display: 'block', textAlign: 'center' }}>
-                    Version 1.0.0
-                </Typography>
-            </Box>
         </Drawer>
     );
 };
