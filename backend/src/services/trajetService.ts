@@ -7,7 +7,7 @@ export const createTrajet = async (data: Partial<ITrajet>) => {
 
 export const getAllTrajets = async () => {
     return trajetModel.find()
-        .populate('chauffeurId', 'nom prenom')
+        .populate('chauffeurId', 'nom')
         .populate('camionId', 'immatriculation')
         .populate('remorqueId', 'immatriculation')
         .sort({ dateDepart: -1 });
@@ -22,7 +22,7 @@ export const getTrajetsByChauffeur = async (chauffeurId: string) => {
 
 export const getTrajetById = async (id: string) => {
     return trajetModel.findById(id)
-        .populate('chauffeurId', 'nom prenom')
+        .populate('chauffeurId', 'nom')
         .populate('camionId', 'immatriculation')
         .populate('remorqueId', 'immatriculation');
 };
