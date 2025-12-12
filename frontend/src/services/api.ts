@@ -65,4 +65,15 @@ export const remorqueAPI = {
     delete: (id: string) => api.delete(`/remorque/${id}`),
 };
 
+// API Pneus
+export const pneuAPI = {
+    getAll: () => api.get('/pneu'),
+    getById: (id: string) => api.get(`/pneu/${id}`),
+    getByVehicule: (vehiculeType: string, vehiculeId: string) => 
+        api.get(`/pneu/vehicule/${vehiculeType}/${vehiculeId}`),
+    create: (data: any) => api.post('/pneu', data),
+    update: (id: string, data: any) => api.put(`/pneu/${id}`, data),
+    delete: (id: string) => api.delete(`/pneu/${id}`),
+};
+
 export default api;

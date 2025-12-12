@@ -56,7 +56,7 @@ const initialFormState = {
     immatriculation: '',
     type: '',
     capacite: 0,
-    statut: 'disponible' as const,
+    statut: 'disponible' as 'disponible' | 'en_mission' | 'maintenance',
 };
 
 const Remorques = () => {

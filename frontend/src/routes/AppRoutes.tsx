@@ -8,6 +8,7 @@ import Dashboard from '../pages/Dashboard';
 import Chauffeurs from '../pages/Chauffeurs';
 import Camions from '../pages/Camions';
 import Remorques from '../pages/Remorques';
+import Pneus from '../pages/Pneus';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -26,7 +27,7 @@ const AppRoutes = () => {
                 <Route path="/camions" element={<Camions />} />
                 <Route path="/remorques" element={<Remorques />} />
                 <Route path="/trajets" element={<Dashboard />} />
-                <Route path="/pneus" element={<Dashboard />} />
+                <Route path="/pneus" element={<Pneus />} />
                 <Route path="/maintenance" element={<Dashboard />} />
                 <Route path="/chauffeurs" element={<Chauffeurs />} />
             </Route>
