@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   Box,
   Typography,
@@ -28,7 +29,7 @@ import {
   DirectionsCar as CamionIcon,
   LocalShipping as RemorqueIcon,
 } from '@mui/icons-material';
-import { pneuAPI, camionAPI, remorqueAPI } from '../services/api';
+import { pneuAPI, camionAPI, remorqueAPI, trajetAPI } from '../services/api';
 
 // Interfaces
 interface Pneu {
@@ -63,6 +64,7 @@ const remorque12Positions = [
 ];
 
 const Pneus = () => {
+  const { user } = useAuth();
   // États
   const [pneus, setPneus] = useState<Pneu[]>([]);
   const [camions, setCamions] = useState<Vehicule[]>([]);
@@ -91,12 +93,43 @@ const Pneus = () => {
   useEffect(() => {
     const loadVehicules = async () => {
       try {
-        const [camionsRes, remorquesRes] = await Promise.all([
-          camionAPI.getAll(),
-          remorqueAPI.getAll(),
-        ]);
-        setCamions(camionsRes.data);
-        setRemorques(remorquesRes.data);
+        if (user?.role === 'admin') {
+          const [camionsRes, remorquesRes] = await Promise.all([
+            camionAPI.getAll(),
+            remorqueAPI.getAll(),
+          ]);
+          setCamions(camionsRes.data);
+          setRemorques(remorquesRes.data);
+        } else {
+          // Pour les chauffeurs, charger uniquement leurs véhicules assignés via les trajets
+          const trajetsRes = await trajetAPI.getMyTrajets();
+          const trajets = trajetsRes.data || [];
+          const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours');
+
+          // Extraire camions uniques
+          const uniqueCamions = new Map();
+          const uniqueRemorques = new Map();
+
+          trajetsActifs.forEach((t: any) => {
+            if (t.camionId) {
+              uniqueCamions.set(t.camionId._id, {
+                _id: t.camionId._id,
+                immatriculation: t.camionId.immatriculation,
+                nombreEssieux: t.camionId.nombreEssieux
+              });
+            }
+            if (t.remorqueId) {
+              uniqueRemorques.set(t.remorqueId._id, {
+                _id: t.remorqueId._id,
+                immatriculation: t.remorqueId.immatriculation,
+                nombreEssieux: t.remorqueId.nombreEssieux
+              });
+            }
+          });
+
+          setCamions(Array.from(uniqueCamions.values()));
+          setRemorques(Array.from(uniqueRemorques.values()));
+        }
       } catch (err) {
         console.error('Erreur chargement véhicules:', err);
       }
@@ -115,7 +148,7 @@ const Pneus = () => {
 
   const loadPneus = async () => {
     if (!selectedVehiculeId) return;
-    
+
     setLoading(true);
     try {
       const response = await pneuAPI.getByVehicule(vehiculeType, selectedVehiculeId);
@@ -134,7 +167,7 @@ const Pneus = () => {
     if (vehiculeType === 'camion') {
       return camionPositions;
     }
-    
+
     const selectedRemorque = remorques.find(r => r._id === selectedVehiculeId);
     if (selectedRemorque?.nombreEssieux === 3) {
       return remorque12Positions;
@@ -161,7 +194,7 @@ const Pneus = () => {
   const handleOpenDialog = (position: string) => {
     const existingPneu = getPneuAtPosition(position);
     setSelectedPosition(position);
-    
+
     if (existingPneu) {
       setEditingPneu(existingPneu);
       setFormData({
@@ -179,7 +212,7 @@ const Pneus = () => {
         statut: 'bon',
       });
     }
-    
+
     setOpenDialog(true);
   };
 
@@ -220,7 +253,7 @@ const Pneus = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Supprimer ce pneu ?')) return;
-    
+
     try {
       await pneuAPI.delete(id);
       loadPneus();
@@ -233,7 +266,7 @@ const Pneus = () => {
   // Obtenir le nom du véhicule sélectionné
   const getSelectedVehiculeName = (): string => {
     if (!selectedVehiculeId) return '';
-    
+
     if (vehiculeType === 'camion') {
       const camion = camions.find(c => c._id === selectedVehiculeId);
       return camion?.immatriculation || '';
@@ -247,7 +280,7 @@ const Pneus = () => {
   const renderTireBox = (position: string) => {
     const pneu = getPneuAtPosition(position);
     const isEmpty = !pneu;
-    
+
     return (
       <Tooltip
         key={position}
@@ -290,7 +323,7 @@ const Pneus = () => {
   const renderCamion = () => (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
       <Typography variant="subtitle2" color="text.secondary">AVANT</Typography>
-      
+
       {/* Essieu avant */}
       <Box sx={{ display: 'flex', gap: 4 }}>
         {renderTireBox('AV-G')}
@@ -344,14 +377,14 @@ const Pneus = () => {
   const renderRemorque = () => {
     const selectedRemorque = remorques.find(r => r._id === selectedVehiculeId);
     const nombreEssieux = selectedRemorque?.nombreEssieux || 2;
-    
+
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <Typography variant="subtitle2" color="text.secondary">AVANT (Attelage)</Typography>
-        
+
         {/* Attelage */}
         <Box sx={{ width: 40, height: 30, bgcolor: '#757575', borderRadius: '50%' }} />
-        
+
         {/* Corps de la remorque */}
         <Box sx={{ width: 280, height: 80, bgcolor: '#616161', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <RemorqueIcon sx={{ color: 'white', fontSize: 50 }} />
@@ -385,7 +418,7 @@ const Pneus = () => {
         <Typography variant="h6" gutterBottom>
           Sélectionner un véhicule
         </Typography>
-        
+
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Type de véhicule */}
           <ToggleButtonGroup
@@ -454,9 +487,9 @@ const Pneus = () => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Cliquez sur une position pour ajouter ou modifier un pneu
           </Typography>
-          
+
           {vehiculeType === 'camion' ? renderCamion() : renderRemorque()}
-          
+
           {/* Résumé */}
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
@@ -511,7 +544,7 @@ const Pneus = () => {
               fullWidth
               required
             />
-            
+
             <TextField
               label="Km à l'installation"
               type="number"
@@ -519,7 +552,7 @@ const Pneus = () => {
               onChange={(e) => setFormData({ ...formData, kmInstallation: Number(e.target.value) })}
               fullWidth
             />
-            
+
             <TextField
               label="Km limite"
               type="number"
@@ -527,7 +560,7 @@ const Pneus = () => {
               onChange={(e) => setFormData({ ...formData, kmLimite: Number(e.target.value) })}
               fullWidth
             />
-            
+
             <FormControl fullWidth>
               <InputLabel>Statut</InputLabel>
               <Select
@@ -544,8 +577,8 @@ const Pneus = () => {
         </DialogContent>
         <DialogActions>
           {editingPneu && (
-            <Button 
-              color="error" 
+            <Button
+              color="error"
               onClick={() => {
                 handleDelete(editingPneu._id);
                 handleCloseDialog();
@@ -557,8 +590,8 @@ const Pneus = () => {
           )}
           <Box sx={{ flex: 1 }} />
           <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             variant="contained"
             disabled={!formData.marque}
           >
