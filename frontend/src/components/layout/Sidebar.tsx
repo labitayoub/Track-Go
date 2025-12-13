@@ -36,9 +36,9 @@ const menuItems: MenuItem[] = [
     { label: 'Chauffeurs', path: '/chauffeurs', icon: <People />, adminOnly: true },
     { label: 'Camions', path: '/camions', icon: <LocalShipping />, adminOnly: true },
     { label: 'Remorques', path: '/remorques', icon: <RvHookup />, adminOnly: true },
-    { label: 'Pneus', path: '/pneus', icon: <TireRepair />, adminOnly: true },
+    { label: 'Pneus', path: '/pneus', icon: <TireRepair /> },
     { label: 'Trajets', path: '/trajets', icon: <Route /> },
-    { label: 'Maintenance', path: '/maintenance', icon: <Build />, adminOnly: true },
+    { label: 'Maintenance', path: '/maintenance', icon: <Build /> },
 ];
 
 const Sidebar = () => {
@@ -82,7 +82,7 @@ const Sidebar = () => {
                         </Typography>
                     </Box>
                 </Box>
-                
+
                 {/* User info */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 2 }}>
                     <Avatar sx={{ width: 32, height: 32, bgcolor: '#e3f2fd', color: '#1976d2', fontSize: '0.875rem' }}>

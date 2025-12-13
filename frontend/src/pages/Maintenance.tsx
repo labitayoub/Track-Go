@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { camionAPI, maintenanceAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { camionAPI, maintenanceAPI, trajetAPI } from '../services/api';
 import {
     Box,
     Typography,
@@ -79,6 +80,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 const Maintenance = () => {
+    const { user } = useAuth();
     const [maintenances, setMaintenances] = useState<MaintenanceRecord[]>([]);
     const [camions, setCamions] = useState<Camion[]>([]);
     const [loading, setLoading] = useState(false);
@@ -97,27 +99,47 @@ const Maintenance = () => {
         statut: 'planifiee' as 'planifiee' | 'terminee',
     });
 
-    useEffect(() => {
-        loadData();
-    }, []);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const [maintenancesRes, camionsRes] = await Promise.all([
-                maintenanceAPI.getAll(),
-                camionAPI.getAll(),
-            ]);
-            setMaintenances(maintenancesRes.data || []);
-            setCamions(camionsRes.data || []);
-            setError('');
-        } catch (err: any) {
-            console.error('Erreur chargement:', err);
-            setError('Erreur lors du chargement des données');
-        } finally {
-            setLoading(false);
-        }
-    };
+
+    useEffect(() => {
+        const fetchAndFilter = async () => {
+            setLoading(true);
+            try {
+                const [maintenancesRes, camionsRes] = await Promise.all([
+                    maintenanceAPI.getAll(),
+                    camionAPI.getAll(),
+                ]);
+                let maintenances = maintenancesRes.data || [];
+                const camions = camionsRes.data || [];
+
+                if (user?.role === 'chauffeur') {
+                    // Récupérer tous les véhicules liés au chauffeur via ses trajets
+                    const trajetsRes = await trajetAPI.getMyTrajets();
+                    const trajets = trajetsRes.data || [];
+                    const allowedIds = new Set();
+                    trajets.forEach((t: any) => {
+                        if (t.camionId?._id) allowedIds.add(t.camionId._id);
+                        if (t.remorqueId?._id) allowedIds.add(t.remorqueId._id);
+                    });
+                    maintenances = maintenances.filter((m: any) => {
+                        const id = typeof m.camionId === 'object' ? m.camionId._id : m.camionId;
+                        return allowedIds.has(id);
+                    });
+                }
+                setMaintenances(maintenances);
+                setCamions(camions);
+                setError('');
+            } catch (err: any) {
+                console.error('Erreur chargement:', err);
+                setError('Erreur lors du chargement des données');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAndFilter();
+    }, [user]);
+
+    // loadData n'est plus utilisé, remplacé par fetchAndFilter dans useEffect
 
     const handleOpenDialog = (maintenance?: MaintenanceRecord) => {
         if (maintenance) {

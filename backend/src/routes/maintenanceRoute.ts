@@ -21,13 +21,14 @@ router.get('/upcoming', getUpcomingMaintenancesController);
 router.get('/overdue', getOverdueMaintenancesController);
 router.get('/stats', getMaintenanceStatsController);
 
+// Routes accessibles aux admins et chauffeurs
+router.post('/', authorize('admin', 'chauffeur'), createMaintenanceController);
+router.get('/', authorize('admin', 'chauffeur'), getAllMaintenancesController);
+router.get('/camion/:camionId', authorize('admin', 'chauffeur'), getMaintenancesByCamionController);
+router.get('/:id', authorize('admin', 'chauffeur'), getMaintenanceByIdController);
+router.put('/:id', authorize('admin', 'chauffeur'), updateMaintenanceController);
+
 // Routes admin only
-router.use(authorize('admin'));
-router.post('/', createMaintenanceController);
-router.get('/', getAllMaintenancesController);
-router.get('/camion/:camionId', getMaintenancesByCamionController);
-router.get('/:id', getMaintenanceByIdController);
-router.put('/:id', updateMaintenanceController);
-router.delete('/:id', deleteMaintenanceController);
+router.delete('/:id', authorize('admin'), deleteMaintenanceController);
 
 export default router;

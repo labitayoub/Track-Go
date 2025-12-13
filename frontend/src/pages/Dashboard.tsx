@@ -485,9 +485,26 @@ const Dashboard = () => {
                                         startIcon={<Warning />}
                                         onClick={() => navigate('/pneus')}
                                         color="error"
-                                        sx={{ borderRadius: 2 }}
+                                        sx={{ borderRadius: 2, mb: 1 }}
                                     >
                                         Signaler un problème pneu
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        fullWidth
+                                        startIcon={<Build />}
+                                        color="primary"
+                                        sx={{ borderRadius: 2 }}
+                                        onClick={() => {
+                                            // On priorise le camion, sinon la remorque
+                                            if (vehicle.camionImmat && vehicle.camionImmat !== 'N/A') {
+                                                navigate(`/maintenance?type=camion&immat=${vehicle.camionImmat}`);
+                                            } else if (vehicle.remorqueImmat) {
+                                                navigate(`/maintenance?type=remorque&immat=${vehicle.remorqueImmat}`);
+                                            }
+                                        }}
+                                    >
+                                        Lancer maintenance
                                     </Button>
                                 </Card>
                             ))}
