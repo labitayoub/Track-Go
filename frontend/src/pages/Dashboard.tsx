@@ -35,7 +35,7 @@ const Dashboard = () => {
             setLoading(true);
             
             // Load all data in parallel
-            const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
+            const [camionsRes, , chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
                 camionAPI.getAll(),
                 remorqueAPI.getAll(),
                 user?.role === 'admin' ? adminAPI.getChauffeurs() : Promise.resolve({ data: [] }),
@@ -44,7 +44,6 @@ const Dashboard = () => {
             ]);
 
             const camions = camionsRes.data;
-            const remorques = remorquesRes.data;
             const chauffeurs = chauffeursRes.data || [];
             const trajets = trajetsRes.data || [];
             const critiques: VehiculeCritique[] = critiquesRes.data || [];
