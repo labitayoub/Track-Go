@@ -29,7 +29,14 @@ export const deletePneu = async (id: string) => {
 
 // Get critical tires (critique) grouped by vehicle with vehicle info
 export const getCritiquesPneus = async () => {
+    console.log('=== getCritiquesPneus appelé ===' );
+    
+    // Chercher tous les pneus pour debug
+    const allPneus = await pneuModel.find();
+    console.log('Tous les pneus:', allPneus.map(p => ({ id: p._id, statut: p.statut, position: p.position })));
+    
     const pneusCritiques = await pneuModel.find({ statut: 'critique' });
+    console.log('Pneus critiques trouvés:', pneusCritiques.length);
     
     // Group by vehicle
     const vehiculesMap = new Map<string, {
