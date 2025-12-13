@@ -1,9 +1,9 @@
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert } from '@mui/material';
-import { People, LocalShipping, Route, DirectionsCar, Warning, RvHookup, TireRepair } from '@mui/icons-material';
+import { People, LocalShipping, Route, DirectionsCar, Warning, RvHookup, TireRepair, Build } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI } from '../services/api';
+import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceAPI } from '../services/api';
 
 interface VehiculeCritique {
     vehiculeId: string;
@@ -12,18 +12,27 @@ interface VehiculeCritique {
     pneus: Array<{ position: string; marque: string; _id: string }>;
 }
 
+interface MaintenanceStats {
+    total: number;
+    planifiees: number;
+    terminees: number;
+    enRetard: number;
+    aVenir: number;
+}
+
 interface Stats {
     camions: number;
     chauffeurs: number;
     remorques: number;
     trajetsActifs: number;
     alertes: number;
+    maintenanceEnRetard: number;
 }
 
 const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, remorques: 0, trajetsActifs: 0, alertes: 0 });
+    const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, remorques: 0, trajetsActifs: 0, alertes: 0, maintenanceEnRetard: 0 });
     const [vehiculesCritiques, setVehiculesCritiques] = useState<VehiculeCritique[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,17 +45,19 @@ const Dashboard = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             console.log('Chargement des données du dashboard...');
-            
+
             // Load all data in parallel
-            const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
+            const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes] = await Promise.all([
                 camionAPI.getAll(),
                 remorqueAPI.getAll(),
                 adminAPI.getChauffeurs(),
                 user?.role === 'admin' ? trajetAPI.getAll() : trajetAPI.getMyTrajets(),
-                pneuAPI.getCritiques()
+                pneuAPI.getCritiques(),
+                maintenanceAPI.getStats()
             ]);
+            const maintenanceStats: MaintenanceStats = maintenanceStatsRes.data || { enRetard: 0, aVenir: 0 };
 
             const camions = camionsRes.data;
             const remorques = remorquesRes.data;
@@ -69,9 +80,10 @@ const Dashboard = () => {
                 chauffeurs: chauffeurs.length,
                 remorques: remorques.length,
                 trajetsActifs,
-                alertes: critiques.length
+                alertes: critiques.length,
+                maintenanceEnRetard: maintenanceStats.enRetard
             });
-            
+
             console.log('Dashboard chargé avec succès:', { camions: camions.length, chauffeurs: chauffeurs.length, trajetsActifs, alertes: critiques.length });
         } catch (error: any) {
             console.error('Erreur chargement dashboard:', error);
@@ -89,7 +101,7 @@ const Dashboard = () => {
                     {error}
                 </Alert>
             )}
-            
+
             {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h3" sx={{ fontWeight: 300, mb: 1, color: '#1a1a1a' }}>
@@ -101,7 +113,7 @@ const Dashboard = () => {
             </Box>
 
             {/* Stats Cards */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 3, mb: 4 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }, gap: 3, mb: 4 }}>
                 <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2', width: 48, height: 48 }}>
@@ -154,18 +166,18 @@ const Dashboard = () => {
                         </Box>
                     </Box>
                 </Card>
-                <Card sx={{ 
-                    p: 3, 
-                    border: stats.alertes > 0 ? '2px solid #f44336' : '1px solid #e0e0e0', 
-                    boxShadow: stats.alertes > 0 ? '0 0 10px rgba(244, 67, 54, 0.3)' : 'none', 
+                <Card sx={{
+                    p: 3,
+                    border: stats.alertes > 0 ? '2px solid #f44336' : '1px solid #e0e0e0',
+                    boxShadow: stats.alertes > 0 ? '0 0 10px rgba(244, 67, 54, 0.3)' : 'none',
                     borderRadius: 3,
                     bgcolor: stats.alertes > 0 ? '#fff5f5' : 'white'
                 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ 
-                            bgcolor: stats.alertes > 0 ? '#f44336' : '#fce4ec', 
-                            color: stats.alertes > 0 ? 'white' : '#c2185b', 
-                            width: 48, 
+                        <Avatar sx={{
+                            bgcolor: stats.alertes > 0 ? '#f44336' : '#fce4ec',
+                            color: stats.alertes > 0 ? 'white' : '#c2185b',
+                            width: 48,
                             height: 48,
                             animation: stats.alertes > 0 ? 'pulse 2s infinite' : 'none',
                             '@keyframes pulse': {
@@ -184,14 +196,38 @@ const Dashboard = () => {
                         </Box>
                     </Box>
                 </Card>
+                <Card sx={{
+                    p: 3,
+                    border: stats.maintenanceEnRetard > 0 ? '2px solid #ff9800' : '1px solid #e0e0e0',
+                    boxShadow: stats.maintenanceEnRetard > 0 ? '0 0 10px rgba(255, 152, 0, 0.3)' : 'none',
+                    borderRadius: 3,
+                    bgcolor: stats.maintenanceEnRetard > 0 ? '#fff8e1' : 'white'
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{
+                            bgcolor: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#e8f5e9',
+                            color: stats.maintenanceEnRetard > 0 ? 'white' : '#388e3c',
+                            width: 48,
+                            height: 48
+                        }}>
+                            <Build />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h4" sx={{ fontWeight: 600, color: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#1a1a1a' }}>
+                                {loading ? <CircularProgress size={24} /> : stats.maintenanceEnRetard}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">Maintenance en retard</Typography>
+                        </Box>
+                    </Box>
+                </Card>
             </Box>
 
             {/* Section Alertes Urgentes - Pneus Critiques */}
             {vehiculesCritiques.length > 0 && (
-                <Card sx={{ 
-                    p: 3, 
-                    mb: 4, 
-                    border: '2px solid #f44336', 
+                <Card sx={{
+                    p: 3,
+                    mb: 4,
+                    border: '2px solid #f44336',
                     borderRadius: 3,
                     bgcolor: '#fff8f8'
                 }}>
@@ -207,8 +243,8 @@ const Dashboard = () => {
                                 {vehiculesCritiques.length} véhicule(s) nécessitent un remplacement de pneus immédiat
                             </Typography>
                         </Box>
-                        <Button 
-                            variant="contained" 
+                        <Button
+                            variant="contained"
                             color="error"
                             startIcon={<TireRepair />}
                             onClick={() => navigate('/pneus')}
@@ -220,10 +256,10 @@ const Dashboard = () => {
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
                         {vehiculesCritiques.map((vehicule, index) => (
-                            <Card 
-                                key={index} 
-                                sx={{ 
-                                    p: 2, 
+                            <Card
+                                key={index}
+                                sx={{
+                                    p: 2,
                                     border: '1px solid #ffcdd2',
                                     bgcolor: 'white',
                                     borderRadius: 2,
@@ -237,7 +273,7 @@ const Dashboard = () => {
                                 onClick={() => navigate('/pneus')}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar sx={{ 
+                                    <Avatar sx={{
                                         bgcolor: vehicule.vehiculeType === 'camion' ? '#e3f2fd' : '#f3e5f5',
                                         color: vehicule.vehiculeType === 'camion' ? '#1976d2' : '#9c27b0'
                                     }}>
@@ -252,7 +288,7 @@ const Dashboard = () => {
                                         </Typography>
                                     </Box>
                                     <Box sx={{ textAlign: 'right' }}>
-                                        <Chip 
+                                        <Chip
                                             label={`${vehicule.pneus.length} pneu(s)`}
                                             color="error"
                                             size="small"

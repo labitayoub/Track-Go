@@ -1,10 +1,20 @@
 import { camionModel, type ICamion } from '../models/camionModel.js';
 import { getActiveTrajetResources } from './trajetService.js';
+import { maintenanceModel } from '../models/maintenanceModel.js';
 
 export const getAvailableCamions = async () => {
     const { camionIds } = await getActiveTrajetResources();
-    return camionModel.find({ 
-        _id: { $nin: camionIds },
+
+    // Get camions with pending (non-completed) maintenance
+    const camionsEnMaintenance = await maintenanceModel.find({
+        statut: 'planifiee'
+    }).distinct('camionId');
+
+    // Combine exclusions: active trajets + pending maintenances
+    const excludedIds = [...camionIds, ...camionsEnMaintenance.map(id => id.toString())];
+
+    return camionModel.find({
+        _id: { $nin: excludedIds },
         statut: { $ne: 'maintenance' }
     }).sort({ createdAt: -1 });
 };

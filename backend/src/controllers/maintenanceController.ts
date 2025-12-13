@@ -86,3 +86,33 @@ export const deleteMaintenanceController = async (req: Request, res: Response) =
         res.status(500).json({ message: error.message || 'Erreur serveur' });
     }
 };
+
+// Get upcoming maintenances (next 7 days)
+export const getUpcomingMaintenancesController = async (_req: Request, res: Response) => {
+    try {
+        const maintenances = await maintenanceService.getUpcomingMaintenances();
+        res.json(maintenances);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+// Get overdue maintenances (past due date, not completed)
+export const getOverdueMaintenancesController = async (_req: Request, res: Response) => {
+    try {
+        const maintenances = await maintenanceService.getOverdueMaintenances();
+        res.json(maintenances);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+// Get maintenance statistics for dashboard
+export const getMaintenanceStatsController = async (_req: Request, res: Response) => {
+    try {
+        const stats = await maintenanceService.getMaintenanceStats();
+        res.json(stats);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};

@@ -33,7 +33,7 @@ api.interceptors.response.use(
 export const authAPI = {
     login: (email: string, password: string) =>
         api.post('/user/login', { email, password }),
-    
+
     register: (userData: any) =>
         api.post('/user/register', userData),
 };
@@ -42,10 +42,10 @@ export const authAPI = {
 export const adminAPI = {
     getChauffeurs: () =>
         api.get('/user/chauffeurs'),
-    
+
     getAvailableChauffeurs: () =>
         api.get('/user/chauffeurs/available'),
-    
+
     toggleChauffeurStatus: (id: string) =>
         api.patch(`/user/chauffeurs/${id}/toggle`),
 };
@@ -76,7 +76,7 @@ export const pneuAPI = {
     getCritiques: () => api.get('/pneu/critiques'),
     checkKilometrage: () => api.post('/pneu/check-kilometrage'),
     getById: (id: string) => api.get(`/pneu/${id}`),
-    getByVehicule: (vehiculeType: string, vehiculeId: string) => 
+    getByVehicule: (vehiculeType: string, vehiculeId: string) =>
         api.get(`/pneu/vehicule/${vehiculeType}/${vehiculeId}`),
     create: (data: any) => api.post('/pneu', data),
     update: (id: string, data: any) => api.put(`/pneu/${id}`, data),
@@ -91,6 +91,19 @@ export const trajetAPI = {
     create: (data: any) => api.post('/trajet', data),
     update: (id: string, data: any) => api.put(`/trajet/${id}`, data),
     delete: (id: string) => api.delete(`/trajet/${id}`),
+};
+
+// API Maintenance
+export const maintenanceAPI = {
+    getAll: () => api.get('/maintenance'),
+    getUpcoming: () => api.get('/maintenance/upcoming'),
+    getOverdue: () => api.get('/maintenance/overdue'),
+    getStats: () => api.get('/maintenance/stats'),
+    getByCamion: (camionId: string) => api.get(`/maintenance/camion/${camionId}`),
+    getById: (id: string) => api.get(`/maintenance/${id}`),
+    create: (data: any) => api.post('/maintenance', data),
+    update: (id: string, data: any) => api.put(`/maintenance/${id}`, data),
+    delete: (id: string) => api.delete(`/maintenance/${id}`),
 };
 
 export default api;

@@ -10,6 +10,7 @@ import Camions from '../pages/Camions';
 import Remorques from '../pages/Remorques';
 import Pneus from '../pages/Pneus';
 import Trajets from '../pages/Trajets';
+import Maintenance from '../pages/Maintenance';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -30,6 +31,7 @@ const AppRoutes = () => {
                 <Route path="/trajets" element={<Trajets />} />
                 <Route path="/pneus" element={<Pneus />} />
                 <Route path="/chauffeurs" element={<Chauffeurs />} />
+                <Route path="/maintenance" element={<Maintenance />} />
             </Route>
 
             {/* Redirection racine */}

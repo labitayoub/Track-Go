@@ -6,14 +6,23 @@ import {
     getMaintenancesByCamionController,
     getMaintenanceByIdController,
     updateMaintenanceController,
-    deleteMaintenanceController
+    deleteMaintenanceController,
+    getUpcomingMaintenancesController,
+    getOverdueMaintenancesController,
+    getMaintenanceStatsController
 } from '../controllers/maintenanceController.js';
 
 const router = Router();
 
 router.use(authenticate);
-router.use(authorize('admin')); // Toutes les routes maintenance sont admin only
 
+// Routes accessibles à tous les utilisateurs authentifiés
+router.get('/upcoming', getUpcomingMaintenancesController);
+router.get('/overdue', getOverdueMaintenancesController);
+router.get('/stats', getMaintenanceStatsController);
+
+// Routes admin only
+router.use(authorize('admin'));
 router.post('/', createMaintenanceController);
 router.get('/', getAllMaintenancesController);
 router.get('/camion/:camionId', getMaintenancesByCamionController);
