@@ -29,11 +29,21 @@ interface Stats {
     maintenanceEnRetard: number;
 }
 
+interface ChauffeurVehicle {
+    camionImmat: string;
+    camionMarque: string;
+    remorqueImmat?: string;
+    trajetDepart: string;
+    trajetArrivee: string;
+    trajetStatut: string;
+}
+
 const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, remorques: 0, trajetsActifs: 0, alertes: 0, maintenanceEnRetard: 0 });
     const [vehiculesCritiques, setVehiculesCritiques] = useState<VehiculeCritique[]>([]);
+    const [chauffeurVehicles, setChauffeurVehicles] = useState<ChauffeurVehicle[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -48,43 +58,82 @@ const Dashboard = () => {
 
             console.log('Chargement des données du dashboard...');
 
-            // Load all data in parallel
-            const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes] = await Promise.all([
-                camionAPI.getAll(),
-                remorqueAPI.getAll(),
-                adminAPI.getChauffeurs(),
-                user?.role === 'admin' ? trajetAPI.getAll() : trajetAPI.getMyTrajets(),
-                pneuAPI.getCritiques(),
-                maintenanceAPI.getStats()
-            ]);
-            const maintenanceStats: MaintenanceStats = maintenanceStatsRes.data || { enRetard: 0, aVenir: 0 };
+            const isAdmin = user?.role === 'admin';
 
-            const camions = camionsRes.data;
-            const remorques = remorquesRes.data;
-            const chauffeurs = chauffeursRes.data?.chauffeurs || chauffeursRes.data || [];
-            const trajets = trajetsRes.data || [];
-            const critiques: VehiculeCritique[] = critiquesRes.data || [];
+            // Load data based on user role
+            if (isAdmin) {
+                // Admin loads all data
+                const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes] = await Promise.all([
+                    camionAPI.getAll(),
+                    remorqueAPI.getAll(),
+                    adminAPI.getChauffeurs(),
+                    trajetAPI.getAll(),
+                    pneuAPI.getCritiques(),
+                    maintenanceAPI.getStats()
+                ]);
 
-            console.log('Données reçues:');
-            console.log('Camions:', camions);
-            console.log('Remorques:', remorques);
-            console.log('Chauffeurs:', chauffeurs);
-            console.log('Critiques reçus:', critiques);
+                const maintenanceStats: MaintenanceStats = maintenanceStatsRes.data || { enRetard: 0, aVenir: 0 };
+                const camions = camionsRes.data;
+                const remorques = remorquesRes.data;
+                const chauffeurs = chauffeursRes.data?.chauffeurs || chauffeursRes.data || [];
+                const trajets = trajetsRes.data || [];
+                const critiques: VehiculeCritique[] = critiquesRes.data || [];
+                const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours').length;
 
-            // Count active trajets
-            const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours').length;
+                setVehiculesCritiques(critiques);
+                setStats({
+                    camions: camions.length,
+                    chauffeurs: chauffeurs.length,
+                    remorques: remorques.length,
+                    trajetsActifs,
+                    alertes: critiques.length,
+                    maintenanceEnRetard: maintenanceStats.enRetard
+                });
+            } else {
+                // Chauffeur loads only their own data
+                const [trajetsRes, critiquesRes] = await Promise.all([
+                    trajetAPI.getMyTrajets(),
+                    pneuAPI.getCritiques()
+                ]);
 
-            setVehiculesCritiques(critiques);
-            setStats({
-                camions: camions.length,
-                chauffeurs: chauffeurs.length,
-                remorques: remorques.length,
-                trajetsActifs,
-                alertes: critiques.length,
-                maintenanceEnRetard: maintenanceStats.enRetard
-            });
+                const trajets = trajetsRes.data || [];
+                const critiquesAll: VehiculeCritique[] = critiquesRes.data || [];
 
-            console.log('Dashboard chargé avec succès:', { camions: camions.length, chauffeurs: chauffeurs.length, trajetsActifs, alertes: critiques.length });
+                const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours');
+
+                // Get IDs of chauffeur's vehicles
+                const chauffeurVehicleIds = new Set<string>();
+                trajetsActifs.forEach((t: any) => {
+                    if (t.camionId?._id) chauffeurVehicleIds.add(t.camionId._id);
+                    if (t.remorqueId?._id) chauffeurVehicleIds.add(t.remorqueId._id);
+                });
+
+                // Filter critical alerts for these vehicles
+                const chauffeurCritiques = critiquesAll.filter(c => chauffeurVehicleIds.has(c.vehiculeId));
+
+                // Extract vehicle info from chauffeur's active trajets
+                const vehicles: ChauffeurVehicle[] = trajetsActifs.map((t: any) => ({
+                    camionImmat: t.camionId?.immatriculation || 'N/A',
+                    camionMarque: t.camionId?.marque || '',
+                    remorqueImmat: t.remorqueId?.immatriculation || undefined,
+                    trajetDepart: t.depart,
+                    trajetArrivee: t.arrivee,
+                    trajetStatut: t.statut
+                }));
+
+                setVehiculesCritiques(chauffeurCritiques);
+                setChauffeurVehicles(vehicles);
+                setStats({
+                    camions: new Set(trajetsActifs.map((t: any) => t.camionId?._id)).size,
+                    chauffeurs: 0,
+                    remorques: new Set(trajetsActifs.filter((t: any) => t.remorqueId).map((t: any) => t.remorqueId?._id)).size,
+                    trajetsActifs: trajetsActifs.length,
+                    alertes: chauffeurCritiques.length,
+                    maintenanceEnRetard: 0
+                });
+            }
+
+            console.log('Dashboard chargé avec succès');
         } catch (error: any) {
             console.error('Erreur chargement dashboard:', error);
             setError(error?.message || 'Erreur lors du chargement des données');
@@ -337,31 +386,69 @@ const Dashboard = () => {
 
             {/* Chauffeur Content */}
             {user?.role === 'chauffeur' && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
-                                <Route />
-                            </Avatar>
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Mes trajets</Typography>
+                <Box sx={{ mt: 4 }}>
+                    <Typography variant="h5" sx={{ mb: 3, fontWeight: 500 }}>Mes Véhicules Assignés</Typography>
+
+                    {chauffeurVehicles.length === 0 ? (
+                        <Card sx={{ p: 4, textAlign: 'center', bgcolor: '#f5f5f5', border: 'none', boxShadow: 'none' }}>
+                            <Typography color="text.secondary">Aucun véhicule assigné pour le moment.</Typography>
+                        </Card>
+                    ) : (
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                            {chauffeurVehicles.map((vehicle, index) => (
+                                <Card key={index} sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2', width: 56, height: 56 }}>
+                                                <LocalShipping fontSize="large" />
+                                            </Avatar>
+                                            <Box>
+                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                    {vehicle.camionImmat}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {vehicle.camionMarque}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        <Chip
+                                            label={vehicle.trajetStatut === 'en_cours' ? 'En cours' : 'À faire'}
+                                            color={vehicle.trajetStatut === 'en_cours' ? 'success' : 'warning'}
+                                            size="small"
+                                        />
+                                    </Box>
+
+                                    <Box sx={{ bgcolor: '#f8f9fa', p: 2, borderRadius: 2, mb: 2 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                            <Route fontSize="small" color="action" />
+                                            <Typography variant="body2">
+                                                <strong>Trajet:</strong> {vehicle.trajetDepart} → {vehicle.trajetArrivee}
+                                            </Typography>
+                                        </Box>
+                                        {vehicle.remorqueImmat && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <RvHookup fontSize="small" color="action" />
+                                                <Typography variant="body2">
+                                                    <strong>Remorque:</strong> {vehicle.remorqueImmat}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        startIcon={<Warning />}
+                                        onClick={() => navigate('/pneus')}
+                                        color="error"
+                                        sx={{ borderRadius: 2 }}
+                                    >
+                                        Signaler un problème pneu
+                                    </Button>
+                                </Card>
+                            ))}
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Consultez et gérez vos trajets assignés
-                        </Typography>
-                        <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir les trajets</Button>
-                    </Card>
-                    <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                            <Avatar sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}>
-                                <DirectionsCar />
-                            </Avatar>
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Mon véhicule</Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Informations sur votre véhicule assigné
-                        </Typography>
-                        <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir le véhicule</Button>
-                    </Card>
+                    )}
                 </Box>
             )}
         </Box>
