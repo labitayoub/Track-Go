@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress } from '@mui/material';
+import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert } from '@mui/material';
 import { People, LocalShipping, Route, DirectionsCar, Warning, RvHookup, TireRepair } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +25,7 @@ const Dashboard = () => {
     const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, trajetsActifs: 0, alertes: 0 });
     const [vehiculesCritiques, setVehiculesCritiques] = useState<VehiculeCritique[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadDashboardData();
@@ -33,6 +34,9 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
+            setError(null);
+            
+            console.log('Chargement des données du dashboard...');
             
             // Load all data in parallel
             const [camionsRes, , chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
@@ -60,8 +64,11 @@ const Dashboard = () => {
                 trajetsActifs,
                 alertes: critiques.length
             });
-        } catch (error) {
+            
+            console.log('Dashboard chargé avec succès:', { camions: camions.length, chauffeurs: chauffeurs.length, trajetsActifs, alertes: critiques.length });
+        } catch (error: any) {
             console.error('Erreur chargement dashboard:', error);
+            setError(error?.message || 'Erreur lors du chargement des données');
         } finally {
             setLoading(false);
         }
@@ -69,6 +76,13 @@ const Dashboard = () => {
 
     return (
         <Box sx={{ p: 0 }}>
+            {/* Error Alert */}
+            {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                    {error}
+                </Alert>
+            )}
+            
             {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h3" sx={{ fontWeight: 300, mb: 1, color: '#1a1a1a' }}>

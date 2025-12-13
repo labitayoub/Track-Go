@@ -23,6 +23,7 @@ import {
     Stack,
     useMediaQuery,
     useTheme,
+    Alert,
 } from '@mui/material';
 import {
     Add,
@@ -70,6 +71,7 @@ const Camions = () => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState(initialFormState);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -82,8 +84,10 @@ const Camions = () => {
         try {
             const res = await camionAPI.getAll();
             setCamions(res.data.camions || res.data);
-        } catch (error) {
+            setError(null);
+        } catch (error: any) {
             console.error('Erreur chargement camions:', error);
+            setError('Erreur lors du chargement des camions');
         }
         setLoading(false);
     };
@@ -103,6 +107,7 @@ const Camions = () => {
             setEditingId(null);
             setFormData(initialFormState);
         }
+        setError(null);
         setDialogOpen(true);
     };
 
@@ -110,20 +115,63 @@ const Camions = () => {
         setDialogOpen(false);
         setEditingId(null);
         setFormData(initialFormState);
+        setError(null);
+    };
+
+    const validateForm = () => {
+        if (!formData.immatriculation.trim()) {
+            setError('L\'immatriculation est requise');
+            return false;
+        }
+        if (!formData.marque.trim()) {
+            setError('La marque est requise');
+            return false;
+        }
+        if (!formData.modele.trim()) {
+            setError('Le modèle est requis');
+            return false;
+        }
+        if (formData.annee < 1990 || formData.annee > new Date().getFullYear() + 1) {
+            setError('L\'année doit être entre 1990 et ' + (new Date().getFullYear() + 1));
+            return false;
+        }
+        if (formData.kilometrage < 0) {
+            setError('Le kilométrage ne peut pas être négatif');
+            return false;
+        }
+        return true;
     };
 
     const handleSubmit = async () => {
+        if (!validateForm()) return;
+
         setSaving(true);
+        setError(null);
+        
         try {
+            // Préparer les données avec les bons types
+            const dataToSend = {
+                immatriculation: formData.immatriculation.trim(),
+                marque: formData.marque.trim(),
+                modele: formData.modele.trim(),
+                annee: Number(formData.annee),
+                kilometrage: Number(formData.kilometrage),
+                statut: formData.statut,
+            };
+
+            console.log('Données à envoyer:', dataToSend);
+
             if (editingId) {
-                await camionAPI.update(editingId, formData);
+                await camionAPI.update(editingId, dataToSend);
             } else {
-                await camionAPI.create(formData);
+                await camionAPI.create(dataToSend);
             }
             handleCloseDialog();
             loadCamions();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erreur sauvegarde:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de la sauvegarde';
+            setError(errorMessage);
         }
         setSaving(false);
     };
@@ -133,8 +181,9 @@ const Camions = () => {
         try {
             await camionAPI.delete(id);
             loadCamions();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erreur suppression:', error);
+            setError(error.response?.data?.message || 'Erreur lors de la suppression');
         }
     };
 
@@ -148,6 +197,13 @@ const Camions = () => {
 
     return (
         <Box>
+            {/* Error Alert */}
+            {error && (
+                <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+                    {error}
+                </Alert>
+            )}
+
             {/* Header */}
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
@@ -275,6 +331,11 @@ const Camions = () => {
                     {editingId ? 'Modifier le camion' : 'Ajouter un camion'}
                 </DialogTitle>
                 <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                     <Stack spacing={3} sx={{ mt: 1 }}>
                         <TextField
                             label="Immatriculation"
@@ -282,6 +343,8 @@ const Camions = () => {
                             onChange={(e) => setFormData({ ...formData, immatriculation: e.target.value })}
                             fullWidth
                             required
+                            error={!formData.immatriculation.trim()}
+                            helperText={!formData.immatriculation.trim() ? 'Champ requis' : ''}
                         />
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <TextField
@@ -290,6 +353,8 @@ const Camions = () => {
                                 onChange={(e) => setFormData({ ...formData, marque: e.target.value })}
                                 fullWidth
                                 required
+                                error={!formData.marque.trim()}
+                                helperText={!formData.marque.trim() ? 'Champ requis' : ''}
                             />
                             <TextField
                                 label="Modèle"
@@ -297,6 +362,8 @@ const Camions = () => {
                                 onChange={(e) => setFormData({ ...formData, modele: e.target.value })}
                                 fullWidth
                                 required
+                                error={!formData.modele.trim()}
+                                helperText={!formData.modele.trim() ? 'Champ requis' : ''}
                             />
                         </Box>
                         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -304,17 +371,19 @@ const Camions = () => {
                                 label="Année"
                                 type="number"
                                 value={formData.annee}
-                                onChange={(e) => setFormData({ ...formData, annee: parseInt(e.target.value) })}
+                                onChange={(e) => setFormData({ ...formData, annee: parseInt(e.target.value) || new Date().getFullYear() })}
                                 fullWidth
                                 required
+                                inputProps={{ min: 1990, max: new Date().getFullYear() + 1 }}
                             />
                             <TextField
                                 label="Kilométrage"
                                 type="number"
                                 value={formData.kilometrage}
-                                onChange={(e) => setFormData({ ...formData, kilometrage: parseInt(e.target.value) })}
+                                onChange={(e) => setFormData({ ...formData, kilometrage: parseInt(e.target.value) || 0 })}
                                 fullWidth
                                 required
+                                inputProps={{ min: 0 }}
                             />
                         </Box>
                         <TextField
@@ -337,7 +406,7 @@ const Camions = () => {
                     <Button
                         onClick={handleSubmit}
                         variant="contained"
-                        disabled={saving || !formData.immatriculation || !formData.marque || !formData.modele}
+                        disabled={saving || !formData.immatriculation.trim() || !formData.marque.trim() || !formData.modele.trim()}
                     >
                         {saving ? <CircularProgress size={20} /> : editingId ? 'Modifier' : 'Ajouter'}
                     </Button>
