@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { camionAPI, remorqueAPI, pneuAPI, maintenanceAPI } from '../services/api';
+import { camionAPI, maintenanceAPI } from '../services/api';
 import {
     Box,
     Typography,
@@ -11,11 +11,6 @@ import {
     MenuItem,
     Chip,
     Stack,
-    ToggleButton,
-    ToggleButtonGroup,
-    Tooltip,
-    Paper,
-    Divider,
     Alert,
     Button,
     Dialog,
@@ -30,15 +25,9 @@ import {
     TableHead,
     TableRow,
     IconButton,
-    Tabs,
-    Tab,
 } from '@mui/material';
 import {
     LocalShipping,
-    RvHookup,
-    Warning,
-    CheckCircle,
-    Error as ErrorIcon,
     Add,
     Edit,
     Delete,
@@ -49,17 +38,6 @@ import {
 } from '@mui/icons-material';
 
 // Interfaces
-interface Pneu {
-    _id: string;
-    vehiculeId: string;
-    vehiculeType: 'camion' | 'remorque';
-    position: string;
-    marque: string;
-    kmInstallation: number;
-    kmLimite: number;
-    statut: 'bon' | 'use' | 'critique';
-}
-
 interface Camion {
     _id: string;
     immatriculation: string;
@@ -101,7 +79,6 @@ const typeIcons: Record<string, React.ReactNode> = {
 };
 
 const Maintenance = () => {
-    const [activeTab, setActiveTab] = useState(0);
     const [maintenances, setMaintenances] = useState<MaintenanceRecord[]>([]);
     const [camions, setCamions] = useState<Camion[]>([]);
     const [loading, setLoading] = useState(false);

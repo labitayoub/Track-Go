@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert } from '@mui/material';
-import { People, LocalShipping, Route, DirectionsCar, Warning, RvHookup, TireRepair, Build } from '@mui/icons-material';
+import { People, LocalShipping, Route, Warning, RvHookup, TireRepair, Build } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceAPI } from '../services/api';
