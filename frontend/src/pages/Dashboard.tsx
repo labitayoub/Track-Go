@@ -357,29 +357,73 @@ const Dashboard = () => {
             {/* Admin Content */}
             {user?.role === 'admin' && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                    {/* Gestion de flotte */}
                     <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                             <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
                                 <LocalShipping />
                             </Avatar>
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Gestion de flotte</Typography>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Gestion de flotte</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {loading ? '...' : `${stats.camions} Camions • ${stats.remorques} Remorques`}
+                                </Typography>
+                            </Box>
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Gérez vos camions, remorques et maintenance
-                        </Typography>
-                        <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir la flotte</Button>
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => navigate('/camions')}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                Camions
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => navigate('/remorques')}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                Remorques
+                            </Button>
+                            <Button
+                                variant="text"
+                                size="small"
+                                color="warning"
+                                onClick={() => navigate('/maintenance')}
+                                sx={{ ml: 'auto' }}
+                            >
+                                Maintenance
+                            </Button>
+                        </Box>
                     </Card>
+
+                    {/* Équipe */}
                     <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                             <Avatar sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}>
                                 <People />
                             </Avatar>
-                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Équipe</Typography>
+                            <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 500 }}>Équipe</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {loading ? '...' : `${stats.chauffeurs} Chauffeurs actifs`}
+                                </Typography>
+                            </Box>
                         </Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Gérez vos chauffeurs et leurs affectations
-                        </Typography>
-                        <Button variant="outlined" sx={{ borderRadius: 2 }}>Voir les chauffeurs</Button>
+
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => navigate('/chauffeurs')}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                Gérer les chauffeurs
+                            </Button>
+                        </Box>
                     </Card>
                 </Box>
             )}
