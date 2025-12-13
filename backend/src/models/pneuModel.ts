@@ -7,7 +7,7 @@ export interface IPneu extends Document {
     marque: string;
     kmInstallation: number;
     kmLimite: number;
-    statut: 'bon' | 'use' | 'a_changer';
+    statut: 'bon' | 'use' | 'critique';
 }
 
 const pneuSchema = new Schema<IPneu>({
@@ -23,7 +23,7 @@ const pneuSchema = new Schema<IPneu>({
     kmLimite: { type: Number, required: true },
     statut: { 
         type: String, 
-        enum: ['bon', 'use', 'a_changer'], 
+        enum: ['bon', 'use', 'critique'], 
         default: 'bon' 
     }
 }, { timestamps: true });

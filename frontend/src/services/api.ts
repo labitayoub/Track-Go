@@ -73,6 +73,7 @@ export const remorqueAPI = {
 // API Pneus
 export const pneuAPI = {
     getAll: () => api.get('/pneu'),
+    getCritiques: () => api.get('/pneu/critiques'),
     getById: (id: string) => api.get(`/pneu/${id}`),
     getByVehicule: (vehiculeType: string, vehiculeId: string) => 
         api.get(`/pneu/vehicule/${vehiculeType}/${vehiculeId}`),

@@ -6,13 +6,15 @@ import {
     getPneusByVehiculeController,
     getPneuByIdController,
     updatePneuController,
-    deletePneuController
+    deletePneuController,
+    getCritiquesController
 } from '../controllers/pneuController.js';
 
 const router = Router();
 
 router.use(authenticate);
 
+router.get('/critiques', getCritiquesController);
 router.post('/', authorize('admin'), createPneuController);
 router.get('/', getAllPneusController);
 router.get('/vehicule/:vehiculeType/:vehiculeId', getPneusByVehiculeController);

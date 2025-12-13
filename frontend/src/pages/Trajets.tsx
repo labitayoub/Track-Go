@@ -111,6 +111,10 @@ const Trajets = () => {
     const [chauffeurs, setChauffeurs] = useState<Chauffeur[]>([]);
     const [camions, setCamions] = useState<Camion[]>([]);
     const [remorques, setRemorques] = useState<Remorque[]>([]);
+    // Listes pour le formulaire (disponibles uniquement)
+    const [availableChauffeurs, setAvailableChauffeurs] = useState<Chauffeur[]>([]);
+    const [availableCamions, setAvailableCamions] = useState<Camion[]>([]);
+    const [availableRemorques, setAvailableRemorques] = useState<Remorque[]>([]);
     const [loading, setLoading] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -129,24 +133,28 @@ const Trajets = () => {
             const trajetsRes = isAdmin ? await trajetAPI.getAll() : await trajetAPI.getMyTrajets();
             setTrajets(trajetsRes.data.trajets || trajetsRes.data);
 
+            // Charger toutes les ressources pour l'affichage
+            const [camionsRes, remorquesRes] = await Promise.all([
+                camionAPI.getAll(),
+                remorqueAPI.getAll(),
+            ]);
+            setCamions(camionsRes.data.camions || camionsRes.data);
+            setRemorques(remorquesRes.data.remorques || remorquesRes.data);
+
             if (isAdmin) {
-                // Pour l'admin, charger les ressources disponibles
-                const [camionsRes, remorquesRes, chauffeursRes] = await Promise.all([
+                // Charger tous les chauffeurs pour l'affichage
+                const chauffeursRes = await adminAPI.getChauffeurs();
+                setChauffeurs(chauffeursRes.data.chauffeurs || chauffeursRes.data);
+
+                // Charger les ressources disponibles pour le formulaire
+                const [availCamionsRes, availRemorquesRes, availChauffeursRes] = await Promise.all([
                     camionAPI.getAvailable(),
                     remorqueAPI.getAvailable(),
                     adminAPI.getAvailableChauffeurs(),
                 ]);
-                setCamions(camionsRes.data.camions || camionsRes.data);
-                setRemorques(remorquesRes.data.remorques || remorquesRes.data);
-                setChauffeurs(chauffeursRes.data.chauffeurs || chauffeursRes.data);
-            } else {
-                // Pour le chauffeur, charger tous les véhicules (pour affichage)
-                const [camionsRes, remorquesRes] = await Promise.all([
-                    camionAPI.getAll(),
-                    remorqueAPI.getAll(),
-                ]);
-                setCamions(camionsRes.data.camions || camionsRes.data);
-                setRemorques(remorquesRes.data.remorques || remorquesRes.data);
+                setAvailableCamions(availCamionsRes.data.camions || availCamionsRes.data);
+                setAvailableRemorques(availRemorquesRes.data.remorques || availRemorquesRes.data);
+                setAvailableChauffeurs(availChauffeursRes.data.chauffeurs || availChauffeursRes.data);
             }
         } catch (error) {
             console.error('Erreur chargement données:', error);
@@ -184,6 +192,46 @@ const Trajets = () => {
             return value._id;
         }
         return value as string;
+    };
+
+    // Obtenir les listes pour le formulaire (disponibles + ressources du trajet en cours)
+    const getFormChauffeurs = (): Chauffeur[] => {
+        if (!editingId) return availableChauffeurs;
+        const trajet = trajets.find(t => t._id === editingId);
+        if (!trajet) return availableChauffeurs;
+        
+        const currentId = getId(trajet.chauffeurId);
+        const currentChauffeur = chauffeurs.find(c => c._id === currentId);
+        if (currentChauffeur && !availableChauffeurs.find(c => c._id === currentId)) {
+            return [currentChauffeur, ...availableChauffeurs];
+        }
+        return availableChauffeurs;
+    };
+
+    const getFormCamions = (): Camion[] => {
+        if (!editingId) return availableCamions;
+        const trajet = trajets.find(t => t._id === editingId);
+        if (!trajet) return availableCamions;
+        
+        const currentId = getId(trajet.camionId);
+        const currentCamion = camions.find(c => c._id === currentId);
+        if (currentCamion && !availableCamions.find(c => c._id === currentId)) {
+            return [currentCamion, ...availableCamions];
+        }
+        return availableCamions;
+    };
+
+    const getFormRemorques = (): Remorque[] => {
+        if (!editingId) return availableRemorques;
+        const trajet = trajets.find(t => t._id === editingId);
+        if (!trajet || !trajet.remorqueId) return availableRemorques;
+        
+        const currentId = getId(trajet.remorqueId);
+        const currentRemorque = remorques.find(r => r._id === currentId);
+        if (currentRemorque && !availableRemorques.find(r => r._id === currentId)) {
+            return [currentRemorque, ...availableRemorques];
+        }
+        return availableRemorques;
     };
 
     const handleOpenDialog = (trajet?: Trajet) => {
@@ -456,7 +504,7 @@ const Trajets = () => {
                                     label="Chauffeur"
                                     onChange={(e) => setFormData({ ...formData, chauffeurId: e.target.value })}
                                 >
-                                    {chauffeurs.map((c) => (
+                                    {getFormChauffeurs().map((c) => (
                                         <MenuItem key={c._id} value={c._id}>{c.nom}</MenuItem>
                                     ))}
                                 </Select>
@@ -470,7 +518,7 @@ const Trajets = () => {
                                     label="Camion"
                                     onChange={(e) => setFormData({ ...formData, camionId: e.target.value })}
                                 >
-                                    {camions.map((c) => (
+                                    {getFormCamions().map((c) => (
                                         <MenuItem key={c._id} value={c._id}>{c.immatriculation}</MenuItem>
                                     ))}
                                 </Select>
@@ -483,7 +531,7 @@ const Trajets = () => {
                                     onChange={(e) => setFormData({ ...formData, remorqueId: e.target.value })}
                                 >
                                     <MenuItem value="">Aucune</MenuItem>
-                                    {remorques.map((r) => (
+                                    {getFormRemorques().map((r) => (
                                         <MenuItem key={r._id} value={r._id}>{r.immatriculation}</MenuItem>
                                     ))}
                                 </Select>
