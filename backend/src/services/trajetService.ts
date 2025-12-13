@@ -1,4 +1,5 @@
 import { trajetModel, type ITrajet } from '../models/trajetModel.js';
+import { checkPneusKilometrage } from './pneuService.js';
 
 // Récupérer les IDs des ressources actuellement en trajet actif
 export const getActiveTrajetResources = async () => {
@@ -41,7 +42,15 @@ export const getTrajetById = async (id: string) => {
 };
 
 export const updateTrajet = async (id: string, data: Partial<ITrajet>) => {
-    return trajetModel.findByIdAndUpdate(id, data, { new: true });
+    const updatedTrajet = await trajetModel.findByIdAndUpdate(id, data, { new: true });
+    
+    // Si le trajet est terminé, vérifier automatiquement les limites des pneus
+    if (data.statut === 'termine') {
+        console.log('Trajet terminé, vérification des limites kilométriques des pneus...');
+        await checkPneusKilometrage();
+    }
+    
+    return updatedTrajet;
 };
 
 export const deleteTrajet = async (id: string) => {

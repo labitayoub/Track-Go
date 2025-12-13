@@ -15,6 +15,7 @@ interface VehiculeCritique {
 interface Stats {
     camions: number;
     chauffeurs: number;
+    remorques: number;
     trajetsActifs: number;
     alertes: number;
 }
@@ -22,7 +23,7 @@ interface Stats {
 const Dashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, trajetsActifs: 0, alertes: 0 });
+    const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, remorques: 0, trajetsActifs: 0, alertes: 0 });
     const [vehiculesCritiques, setVehiculesCritiques] = useState<VehiculeCritique[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -39,19 +40,24 @@ const Dashboard = () => {
             console.log('Chargement des données du dashboard...');
             
             // Load all data in parallel
-            const [camionsRes, , chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
+            const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes] = await Promise.all([
                 camionAPI.getAll(),
                 remorqueAPI.getAll(),
-                user?.role === 'admin' ? adminAPI.getChauffeurs() : Promise.resolve({ data: [] }),
+                adminAPI.getChauffeurs(),
                 user?.role === 'admin' ? trajetAPI.getAll() : trajetAPI.getMyTrajets(),
                 pneuAPI.getCritiques()
             ]);
 
             const camions = camionsRes.data;
-            const chauffeurs = chauffeursRes.data || [];
+            const remorques = remorquesRes.data;
+            const chauffeurs = chauffeursRes.data?.chauffeurs || chauffeursRes.data || [];
             const trajets = trajetsRes.data || [];
             const critiques: VehiculeCritique[] = critiquesRes.data || [];
 
+            console.log('Données reçues:');
+            console.log('Camions:', camions);
+            console.log('Remorques:', remorques);
+            console.log('Chauffeurs:', chauffeurs);
             console.log('Critiques reçus:', critiques);
 
             // Count active trajets
@@ -61,6 +67,7 @@ const Dashboard = () => {
             setStats({
                 camions: camions.length,
                 chauffeurs: chauffeurs.length,
+                remorques: remorques.length,
                 trajetsActifs,
                 alertes: critiques.length
             });
@@ -94,7 +101,7 @@ const Dashboard = () => {
             </Box>
 
             {/* Stats Cards */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' }, gap: 3, mb: 4 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(5, 1fr)' }, gap: 3, mb: 4 }}>
                 <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2', width: 48, height: 48 }}>
@@ -131,6 +138,19 @@ const Dashboard = () => {
                                 {loading ? <CircularProgress size={24} /> : stats.trajetsActifs}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">Trajets actifs</Typography>
+                        </Box>
+                    </Box>
+                </Card>
+                <Card sx={{ p: 3, border: '1px solid #e0e0e0', boxShadow: 'none', borderRadius: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: '#f3e5f5', color: '#9c27b0', width: 48, height: 48 }}>
+                            <RvHookup />
+                        </Avatar>
+                        <Box>
+                            <Typography variant="h4" sx={{ fontWeight: 600, color: '#1a1a1a' }}>
+                                {loading ? <CircularProgress size={24} /> : stats.remorques}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">Remorques</Typography>
                         </Box>
                     </Box>
                 </Card>

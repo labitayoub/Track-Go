@@ -495,10 +495,12 @@ const Pneus = () => {
       {/* Dialog Ajouter/Modifier */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingPneu ? 'Modifier le pneu' : 'Ajouter un pneu'}
-          <Typography variant="subtitle2" color="text.secondary">
-            Position: {selectedPosition} - {getSelectedVehiculeName()}
-          </Typography>
+          <Box>
+            {editingPneu ? 'Modifier le pneu' : 'Ajouter un pneu'}
+            <Typography variant="subtitle2" color="text.secondary" component="div">
+              Position: {selectedPosition} - {getSelectedVehiculeName()}
+            </Typography>
+          </Box>
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>

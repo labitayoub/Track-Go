@@ -98,3 +98,15 @@ export const getCritiquesController = async (_req: Request, res: Response) => {
         res.status(500).json({ message: error.message || 'Erreur serveur' });
     }
 };
+
+export const checkKilometrageController = async (_req: Request, res: Response) => {
+    try {
+        const updatedCount = await pneuService.checkPneusKilometrage();
+        res.json({ 
+            message: `Vérification terminée. ${updatedCount} pneus mis à jour vers statut critique.`,
+            updatedCount 
+        });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};

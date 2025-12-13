@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { camionAPI } from '../services/api';
+import { camionSchema } from '../validation/camionSchema';
 import {
     Box,
     Button,
@@ -119,24 +120,9 @@ const Camions = () => {
     };
 
     const validateForm = () => {
-        if (!formData.immatriculation.trim()) {
-            setError('L\'immatriculation est requise');
-            return false;
-        }
-        if (!formData.marque.trim()) {
-            setError('La marque est requise');
-            return false;
-        }
-        if (!formData.modele.trim()) {
-            setError('Le modèle est requis');
-            return false;
-        }
-        if (formData.annee < 1990 || formData.annee > new Date().getFullYear() + 1) {
-            setError('L\'année doit être entre 1990 et ' + (new Date().getFullYear() + 1));
-            return false;
-        }
-        if (formData.kilometrage < 0) {
-            setError('Le kilométrage ne peut pas être négatif');
+        const { error } = camionSchema.validate(formData, { abortEarly: false });
+        if (error) {
+            setError(error.details[0].message);
             return false;
         }
         return true;

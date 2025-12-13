@@ -74,6 +74,7 @@ export const remorqueAPI = {
 export const pneuAPI = {
     getAll: () => api.get('/pneu'),
     getCritiques: () => api.get('/pneu/critiques'),
+    checkKilometrage: () => api.post('/pneu/check-kilometrage'),
     getById: (id: string) => api.get(`/pneu/${id}`),
     getByVehicule: (vehiculeType: string, vehiculeId: string) => 
         api.get(`/pneu/vehicule/${vehiculeType}/${vehiculeId}`),

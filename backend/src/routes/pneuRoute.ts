@@ -7,7 +7,8 @@ import {
     getPneuByIdController,
     updatePneuController,
     deletePneuController,
-    getCritiquesController
+    getCritiquesController,
+    checkKilometrageController
 } from '../controllers/pneuController.js';
 
 const router = Router();
@@ -15,6 +16,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/critiques', getCritiquesController);
+router.post('/check-kilometrage', authorize('admin'), checkKilometrageController);
 router.post('/', authorize('admin'), createPneuController);
 router.get('/', getAllPneusController);
 router.get('/vehicule/:vehiculeType/:vehiculeId', getPneusByVehiculeController);
