@@ -26,12 +26,28 @@ const AppRoutes = () => {
             <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 {/* Pages CRUD */}
-                <Route path="/camions" element={<Camions />} />
-                <Route path="/remorques" element={<Remorques />} />
+                <Route path="/camions" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Camions />
+                    </ProtectedRoute>
+                } />
+                <Route path="/remorques" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Remorques />
+                    </ProtectedRoute>
+                } />
                 <Route path="/trajets" element={<Trajets />} />
                 <Route path="/pneus" element={<Pneus />} />
-                <Route path="/chauffeurs" element={<Chauffeurs />} />
-                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/chauffeurs" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Chauffeurs />
+                    </ProtectedRoute>
+                } />
+                <Route path="/maintenance" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <Maintenance />
+                    </ProtectedRoute>
+                } />
             </Route>
 
             {/* Redirection racine */}

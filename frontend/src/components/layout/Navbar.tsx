@@ -8,10 +8,8 @@ import {
     Button,
     Chip,
     Avatar,
-    IconButton,
-    Tooltip,
 } from '@mui/material';
-import { Logout, Notifications } from '@mui/icons-material';
+import { Logout } from '@mui/icons-material';
 import { DRAWER_WIDTH } from './Sidebar';
 
 const Navbar = () => {
@@ -70,12 +68,7 @@ const Navbar = () => {
 
                 {/* Right side - User info */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    {/* Notifications */}
-                    <Tooltip title="Notifications">
-                        <IconButton sx={{ color: '#666', '&:hover': { bgcolor: '#f8f9fa' } }}>
-                            <Notifications />
-                        </IconButton>
-                    </Tooltip>
+
 
                     {/* User info */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>

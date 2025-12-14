@@ -199,7 +199,7 @@ const Trajets = () => {
         if (!editingId) return availableChauffeurs;
         const trajet = trajets.find(t => t._id === editingId);
         if (!trajet) return availableChauffeurs;
-        
+
         const currentId = getId(trajet.chauffeurId);
         const currentChauffeur = chauffeurs.find(c => c._id === currentId);
         if (currentChauffeur && !availableChauffeurs.find(c => c._id === currentId)) {
@@ -212,7 +212,7 @@ const Trajets = () => {
         if (!editingId) return availableCamions;
         const trajet = trajets.find(t => t._id === editingId);
         if (!trajet) return availableCamions;
-        
+
         const currentId = getId(trajet.camionId);
         const currentCamion = camions.find(c => c._id === currentId);
         if (currentCamion && !availableCamions.find(c => c._id === currentId)) {
@@ -225,7 +225,7 @@ const Trajets = () => {
         if (!editingId) return availableRemorques;
         const trajet = trajets.find(t => t._id === editingId);
         if (!trajet || !trajet.remorqueId) return availableRemorques;
-        
+
         const currentId = getId(trajet.remorqueId);
         const currentRemorque = remorques.find(r => r._id === currentId);
         if (currentRemorque && !availableRemorques.find(r => r._id === currentId)) {
@@ -307,8 +307,8 @@ const Trajets = () => {
 
     const handleFinishTrajet = async (trajet: Trajet) => {
         try {
-            await trajetAPI.update(trajet._id, { 
-                ...trajet, 
+            await trajetAPI.update(trajet._id, {
+                ...trajet,
                 statut: 'termine',
                 dateArrivee: new Date().toISOString(),
             });
@@ -403,12 +403,12 @@ const Trajets = () => {
                                 )}
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                {trajet.statut === 'a_faire' && (
+                                {trajet.statut === 'a_faire' && !isAdmin && (
                                     <IconButton size="small" onClick={() => handleStartTrajet(trajet)} color="warning">
                                         <PlayArrow />
                                     </IconButton>
                                 )}
-                                {trajet.statut === 'en_cours' && (
+                                {trajet.statut === 'en_cours' && !isAdmin && (
                                     <IconButton size="small" onClick={() => handleFinishTrajet(trajet)} color="success">
                                         <CheckCircle />
                                     </IconButton>
@@ -463,12 +463,12 @@ const Trajets = () => {
                                         />
                                     </TableCell>
                                     <TableCell align="right">
-                                        {trajet.statut === 'a_faire' && (
+                                        {trajet.statut === 'a_faire' && !isAdmin && (
                                             <IconButton size="small" onClick={() => handleStartTrajet(trajet)} color="warning" title="Démarrer">
                                                 <PlayArrow />
                                             </IconButton>
                                         )}
-                                        {trajet.statut === 'en_cours' && (
+                                        {trajet.statut === 'en_cours' && !isAdmin && (
                                             <IconButton size="small" onClick={() => handleFinishTrajet(trajet)} color="success" title="Terminer">
                                                 <CheckCircle />
                                             </IconButton>

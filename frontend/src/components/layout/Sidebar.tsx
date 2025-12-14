@@ -38,7 +38,7 @@ const menuItems: MenuItem[] = [
     { label: 'Remorques', path: '/remorques', icon: <RvHookup />, adminOnly: true },
     { label: 'Pneus', path: '/pneus', icon: <TireRepair /> },
     { label: 'Trajets', path: '/trajets', icon: <Route /> },
-    { label: 'Maintenance', path: '/maintenance', icon: <Build /> },
+    { label: 'Maintenance', path: '/maintenance', icon: <Build />, adminOnly: true },
 ];
 
 const Sidebar = () => {

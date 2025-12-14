@@ -8,6 +8,7 @@ export const createMaintenance = async (data: Partial<IMaintenance>) => {
 export const getAllMaintenances = async () => {
     return maintenanceModel.find()
         .populate('camionId', 'immatriculation')
+        .populate('remorqueId', 'immatriculation')
         .sort({ datePrevue: -1 });
 };
 
@@ -16,7 +17,9 @@ export const getMaintenancesByCamion = async (camionId: string) => {
 };
 
 export const getMaintenanceById = async (id: string) => {
-    return maintenanceModel.findById(id).populate('camionId', 'immatriculation');
+    return maintenanceModel.findById(id)
+        .populate('camionId', 'immatriculation')
+        .populate('remorqueId', 'immatriculation');
 };
 
 export const updateMaintenance = async (id: string, data: Partial<IMaintenance>) => {
@@ -38,6 +41,7 @@ export const getUpcomingMaintenances = async () => {
         statut: 'planifiee'
     })
         .populate('camionId', 'immatriculation marque modele')
+        .populate('remorqueId', 'immatriculation type')
         .sort({ datePrevue: 1 });
 };
 
@@ -50,6 +54,7 @@ export const getOverdueMaintenances = async () => {
         statut: 'planifiee'
     })
         .populate('camionId', 'immatriculation marque modele')
+        .populate('remorqueId', 'immatriculation type')
         .sort({ datePrevue: 1 });
 };
 

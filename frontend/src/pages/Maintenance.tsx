@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { camionAPI, maintenanceAPI, trajetAPI } from '../services/api';
+import { camionAPI, maintenanceAPI, trajetAPI, remorqueAPI } from '../services/api';
 import {
     Box,
     Typography,
@@ -28,7 +28,7 @@ import {
     IconButton,
 } from '@mui/material';
 import {
-    LocalShipping,
+
     Add,
     Edit,
     Delete,
@@ -49,7 +49,8 @@ interface Camion {
 
 interface MaintenanceRecord {
     _id: string;
-    camionId: { _id: string; immatriculation: string } | string;
+    camionId?: { _id: string; immatriculation: string } | string;
+    remorqueId?: { _id: string; immatriculation: string } | string;
     type: 'vidange' | 'pneus' | 'revision' | 'reparation';
     description: string;
     datePrevue: string;
@@ -83,14 +84,17 @@ const Maintenance = () => {
     const { user } = useAuth();
     const [maintenances, setMaintenances] = useState<MaintenanceRecord[]>([]);
     const [camions, setCamions] = useState<Camion[]>([]);
+    const [remorques, setRemorques] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     // Dialog state
     const [openDialog, setOpenDialog] = useState(false);
     const [editingMaintenance, setEditingMaintenance] = useState<MaintenanceRecord | null>(null);
+    const [vehicleType, setVehicleType] = useState<'camion' | 'remorque'>('camion');
     const [formData, setFormData] = useState({
         camionId: '',
+        remorqueId: '',
         type: 'vidange' as 'vidange' | 'pneus' | 'revision' | 'reparation',
         description: '',
         datePrevue: '',
@@ -99,53 +103,61 @@ const Maintenance = () => {
         statut: 'planifiee' as 'planifiee' | 'terminee',
     });
 
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [maintenancesRes, camionsRes, remorquesRes] = await Promise.all([
+                maintenanceAPI.getAll(),
+                camionAPI.getAll(),
+                remorqueAPI.getAll(),
+            ]);
+            let maintenances = maintenancesRes.data || [];
+            const camions = camionsRes.data || [];
+            const remorques = remorquesRes.data || [];
 
+            if (user?.role === 'chauffeur') {
+                const trajetsRes = await trajetAPI.getMyTrajets();
+                const trajets = trajetsRes.data || [];
+                const allowedIds = new Set();
+                trajets.forEach((t: any) => {
+                    if (t.camionId?._id) allowedIds.add(t.camionId._id);
+                    if (t.remorqueId?._id) allowedIds.add(t.remorqueId._id);
+                });
+                maintenances = maintenances.filter((m: any) => {
+                    const camionId = typeof m.camionId === 'object' ? m.camionId?._id : m.camionId;
+                    const remorqueId = typeof m.remorqueId === 'object' ? m.remorqueId?._id : m.remorqueId;
+                    return allowedIds.has(camionId) || allowedIds.has(remorqueId);
+                });
+            }
+            setMaintenances(maintenances);
+            setCamions(camions);
+            setRemorques(remorques);
+            setError('');
+        } catch (err: any) {
+            console.error('Erreur chargement:', err);
+            setError('Erreur lors du chargement des données');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchAndFilter = async () => {
-            setLoading(true);
-            try {
-                const [maintenancesRes, camionsRes] = await Promise.all([
-                    maintenanceAPI.getAll(),
-                    camionAPI.getAll(),
-                ]);
-                let maintenances = maintenancesRes.data || [];
-                const camions = camionsRes.data || [];
-
-                if (user?.role === 'chauffeur') {
-                    // Récupérer tous les véhicules liés au chauffeur via ses trajets
-                    const trajetsRes = await trajetAPI.getMyTrajets();
-                    const trajets = trajetsRes.data || [];
-                    const allowedIds = new Set();
-                    trajets.forEach((t: any) => {
-                        if (t.camionId?._id) allowedIds.add(t.camionId._id);
-                        if (t.remorqueId?._id) allowedIds.add(t.remorqueId._id);
-                    });
-                    maintenances = maintenances.filter((m: any) => {
-                        const id = typeof m.camionId === 'object' ? m.camionId._id : m.camionId;
-                        return allowedIds.has(id);
-                    });
-                }
-                setMaintenances(maintenances);
-                setCamions(camions);
-                setError('');
-            } catch (err: any) {
-                console.error('Erreur chargement:', err);
-                setError('Erreur lors du chargement des données');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAndFilter();
+        fetchData();
     }, [user]);
 
-    // loadData n'est plus utilisé, remplacé par fetchAndFilter dans useEffect
+    // Data loading
+    useEffect(() => {
+        fetchData();
+    }, [user]);
 
     const handleOpenDialog = (maintenance?: MaintenanceRecord) => {
         if (maintenance) {
             setEditingMaintenance(maintenance);
+            const isCamion = !!maintenance.camionId;
+            setVehicleType(isCamion ? 'camion' : 'remorque');
             setFormData({
-                camionId: typeof maintenance.camionId === 'object' ? maintenance.camionId._id : maintenance.camionId,
+                camionId: isCamion ? (typeof maintenance.camionId === 'object' ? maintenance.camionId._id : maintenance.camionId) || '' : '',
+                remorqueId: !isCamion ? (typeof maintenance.remorqueId === 'object' ? maintenance.remorqueId._id : maintenance.remorqueId) || '' : '',
                 type: maintenance.type,
                 description: maintenance.description,
                 datePrevue: maintenance.datePrevue.split('T')[0],
@@ -155,8 +167,13 @@ const Maintenance = () => {
             });
         } else {
             setEditingMaintenance(null);
+            // If we are Manually opening, we should probably default to 'camion' 
+            // OR keep the current selection if the user was just looking at deep link?
+            // Standard behavior: Reset to defaults.
+            setVehicleType('camion');
             setFormData({
                 camionId: '',
+                remorqueId: '',
                 type: 'vidange',
                 description: '',
                 datePrevue: new Date().toISOString().split('T')[0],
@@ -171,15 +188,32 @@ const Maintenance = () => {
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setEditingMaintenance(null);
+        // Clear search params on close so refreshing doesn't re-open? 
+        // Or just let it be. If user navigates away and back, it might persist.
+        // For now, let's leave it.
     };
 
     const handleSubmit = async () => {
         try {
-            const data = {
+            const data: any = {
                 ...formData,
                 dateRealisee: formData.dateRealisee || null,
                 cout: formData.cout || null,
             };
+
+            if (vehicleType === 'camion') {
+                delete data.remorqueId;
+                if (!data.camionId) {
+                    setError('Veuillez sélectionner un camion');
+                    return;
+                }
+            } else {
+                delete data.camionId;
+                if (!data.remorqueId) {
+                    setError('Veuillez sélectionner une remorque');
+                    return;
+                }
+            }
 
             if (editingMaintenance) {
                 await maintenanceAPI.update(editingMaintenance._id, data);
@@ -187,7 +221,7 @@ const Maintenance = () => {
                 await maintenanceAPI.create(data);
             }
             handleCloseDialog();
-            loadData();
+            fetchData();
         } catch (err: any) {
             setError('Erreur lors de la sauvegarde');
         }
@@ -197,18 +231,27 @@ const Maintenance = () => {
         if (!confirm('Supprimer cette maintenance ?')) return;
         try {
             await maintenanceAPI.delete(id);
-            loadData();
+            fetchData();
         } catch (err) {
             setError('Erreur lors de la suppression');
         }
     };
 
-    const getCamionImmat = (camionId: MaintenanceRecord['camionId']): string => {
-        if (typeof camionId === 'object' && camionId?.immatriculation) {
-            return camionId.immatriculation;
+    const getVehicleImmat = (m: MaintenanceRecord): string => {
+        if (m.camionId) {
+            if (typeof m.camionId === 'object' && m.camionId?.immatriculation) {
+                return `🚛 ${m.camionId.immatriculation}`;
+            }
+            const camion = camions.find(c => c._id === m.camionId);
+            return camion ? `🚛 ${camion.immatriculation}` : 'Inconnu';
+        } else if (m.remorqueId) {
+            if (typeof m.remorqueId === 'object' && m.remorqueId?.immatriculation) {
+                return `🔗 ${m.remorqueId.immatriculation}`;
+            }
+            const remorque = remorques.find(r => r._id === m.remorqueId);
+            return remorque ? `🔗 ${remorque.immatriculation}` : 'Inconnu';
         }
-        const camion = camions.find(c => c._id === camionId);
-        return camion?.immatriculation || 'Inconnu';
+        return 'Inconnu';
     };
 
     const formatDate = (dateStr: string): string => {
@@ -292,7 +335,7 @@ const Maintenance = () => {
                         <TableHead>
                             <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                                 <TableCell>Type</TableCell>
-                                <TableCell>Camion</TableCell>
+                                <TableCell>Véhicule</TableCell>
                                 <TableCell>Description</TableCell>
                                 <TableCell>Date prévue</TableCell>
                                 <TableCell>Coût</TableCell>
@@ -332,8 +375,7 @@ const Maintenance = () => {
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <LocalShipping fontSize="small" color="action" />
-                                                {getCamionImmat(m.camionId)}
+                                                {getVehicleImmat(m)}
                                             </Box>
                                         </TableCell>
                                         <TableCell>{m.description}</TableCell>
@@ -379,19 +421,49 @@ const Maintenance = () => {
                 <DialogContent>
                     <Stack spacing={2} sx={{ mt: 1 }}>
                         <FormControl fullWidth>
-                            <InputLabel>Camion</InputLabel>
+                            <InputLabel>Type de Véhicule</InputLabel>
                             <Select
-                                value={formData.camionId}
-                                label="Camion"
-                                onChange={(e) => setFormData({ ...formData, camionId: e.target.value })}
+                                value={vehicleType}
+                                label="Type de Véhicule"
+                                onChange={(e) => setVehicleType(e.target.value as 'camion' | 'remorque')}
+                                disabled={!!editingMaintenance}
                             >
-                                {camions.map(c => (
-                                    <MenuItem key={c._id} value={c._id}>
-                                        {c.immatriculation} - {c.marque} {c.modele}
-                                    </MenuItem>
-                                ))}
+                                <MenuItem value="camion">Camion</MenuItem>
+                                <MenuItem value="remorque">Remorque</MenuItem>
                             </Select>
                         </FormControl>
+
+                        {vehicleType === 'camion' ? (
+                            <FormControl fullWidth>
+                                <InputLabel>Camion</InputLabel>
+                                <Select
+                                    value={formData.camionId}
+                                    label="Camion"
+                                    onChange={(e) => setFormData({ ...formData, camionId: e.target.value })}
+                                >
+                                    {camions.map(c => (
+                                        <MenuItem key={c._id} value={c._id}>
+                                            {c.immatriculation} - {c.marque} {c.modele}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        ) : (
+                            <FormControl fullWidth>
+                                <InputLabel>Remorque</InputLabel>
+                                <Select
+                                    value={formData.remorqueId}
+                                    label="Remorque"
+                                    onChange={(e) => setFormData({ ...formData, remorqueId: e.target.value })}
+                                >
+                                    {remorques.map(r => (
+                                        <MenuItem key={r._id} value={r._id}>
+                                            {r.immatriculation} - {r.type}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
 
                         <FormControl fullWidth>
                             <InputLabel>Type</InputLabel>
@@ -460,7 +532,7 @@ const Maintenance = () => {
                     <Button
                         variant="contained"
                         onClick={handleSubmit}
-                        disabled={!formData.camionId || !formData.description}
+                        disabled={vehicleType === 'camion' ? !formData.camionId : !formData.remorqueId}
                     >
                         {editingMaintenance ? 'Modifier' : 'Créer'}
                     </Button>

@@ -101,7 +101,7 @@ const Dashboard = () => {
 
                 const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours');
 
-                // Get IDs of chauffeur's vehicles
+                // Get IDs of chauffeur's vehicles (only for alerts)
                 const chauffeurVehicleIds = new Set<string>();
                 trajetsActifs.forEach((t: any) => {
                     if (t.camionId?._id) chauffeurVehicleIds.add(t.camionId._id);
@@ -245,30 +245,32 @@ const Dashboard = () => {
                         </Box>
                     </Box>
                 </Card>
-                <Card sx={{
-                    p: 3,
-                    border: stats.maintenanceEnRetard > 0 ? '2px solid #ff9800' : '1px solid #e0e0e0',
-                    boxShadow: stats.maintenanceEnRetard > 0 ? '0 0 10px rgba(255, 152, 0, 0.3)' : 'none',
-                    borderRadius: 3,
-                    bgcolor: stats.maintenanceEnRetard > 0 ? '#fff8e1' : 'white'
-                }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{
-                            bgcolor: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#e8f5e9',
-                            color: stats.maintenanceEnRetard > 0 ? 'white' : '#388e3c',
-                            width: 48,
-                            height: 48
-                        }}>
-                            <Build />
-                        </Avatar>
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 600, color: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#1a1a1a' }}>
-                                {loading ? <CircularProgress size={24} /> : stats.maintenanceEnRetard}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">Maintenance en retard</Typography>
+                {user?.role === 'admin' && (
+                    <Card sx={{
+                        p: 3,
+                        border: stats.maintenanceEnRetard > 0 ? '2px solid #ff9800' : '1px solid #e0e0e0',
+                        boxShadow: stats.maintenanceEnRetard > 0 ? '0 0 10px rgba(255, 152, 0, 0.3)' : 'none',
+                        borderRadius: 3,
+                        bgcolor: stats.maintenanceEnRetard > 0 ? '#fff8e1' : 'white'
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{
+                                bgcolor: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#e8f5e9',
+                                color: stats.maintenanceEnRetard > 0 ? 'white' : '#388e3c',
+                                width: 48,
+                                height: 48
+                            }}>
+                                <Build />
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 600, color: stats.maintenanceEnRetard > 0 ? '#ff9800' : '#1a1a1a' }}>
+                                    {loading ? <CircularProgress size={24} /> : stats.maintenanceEnRetard}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">Maintenance en retard</Typography>
+                            </Box>
                         </Box>
-                    </Box>
-                </Card>
+                    </Card>
+                )}
             </Box>
 
             {/* Section Alertes Urgentes - Pneus Critiques */}
@@ -485,26 +487,9 @@ const Dashboard = () => {
                                         startIcon={<Warning />}
                                         onClick={() => navigate('/pneus')}
                                         color="error"
-                                        sx={{ borderRadius: 2, mb: 1 }}
+                                        sx={{ borderRadius: 2 }}
                                     >
                                         Signaler un problème pneu
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        fullWidth
-                                        startIcon={<Build />}
-                                        color="primary"
-                                        sx={{ borderRadius: 2 }}
-                                        onClick={() => {
-                                            // On priorise le camion, sinon la remorque
-                                            if (vehicle.camionImmat && vehicle.camionImmat !== 'N/A') {
-                                                navigate(`/maintenance?type=camion&immat=${vehicle.camionImmat}`);
-                                            } else if (vehicle.remorqueImmat) {
-                                                navigate(`/maintenance?type=remorque&immat=${vehicle.remorqueImmat}`);
-                                            }
-                                        }}
-                                    >
-                                        Lancer maintenance
                                     </Button>
                                 </Card>
                             ))}
