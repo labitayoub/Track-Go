@@ -3,6 +3,7 @@ import { authenticate, authorize } from '../middlewares/authMiddleware.js';
 import {
     createCamionController,
     getAllCamionsController,
+    getAvailableCamionsController,
     getCamionByIdController,
     updateCamionController,
     deleteCamionController
@@ -16,6 +17,7 @@ router.use(authenticate);
 // Routes CRUD - Admin seulement
 router.post('/', authorize('admin'), createCamionController);
 router.get('/', getAllCamionsController);
+router.get('/available', authorize('admin'), getAvailableCamionsController);
 router.get('/:id', getCamionByIdController);
 router.put('/:id', authorize('admin'), updateCamionController);
 router.delete('/:id', authorize('admin'), deleteCamionController);

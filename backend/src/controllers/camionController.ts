@@ -42,6 +42,15 @@ export const getAllCamionsController = async (_req: Request, res: Response) => {
     }
 };
 
+export const getAvailableCamionsController = async (_req: Request, res: Response) => {
+    try {
+        const camions = await camionService.getAvailableCamions();
+        res.json(camions);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
 export const getCamionByIdController = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;

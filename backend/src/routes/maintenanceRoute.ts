@@ -6,19 +6,29 @@ import {
     getMaintenancesByCamionController,
     getMaintenanceByIdController,
     updateMaintenanceController,
-    deleteMaintenanceController
+    deleteMaintenanceController,
+    getUpcomingMaintenancesController,
+    getOverdueMaintenancesController,
+    getMaintenanceStatsController
 } from '../controllers/maintenanceController.js';
 
 const router = Router();
 
 router.use(authenticate);
-router.use(authorize('admin')); // Toutes les routes maintenance sont admin only
 
-router.post('/', createMaintenanceController);
-router.get('/', getAllMaintenancesController);
-router.get('/camion/:camionId', getMaintenancesByCamionController);
-router.get('/:id', getMaintenanceByIdController);
-router.put('/:id', updateMaintenanceController);
-router.delete('/:id', deleteMaintenanceController);
+// Routes accessibles à tous les utilisateurs authentifiés
+router.get('/upcoming', getUpcomingMaintenancesController);
+router.get('/overdue', getOverdueMaintenancesController);
+router.get('/stats', getMaintenanceStatsController);
+
+// Routes accessibles aux admins et chauffeurs
+router.post('/', authorize('admin', 'chauffeur'), createMaintenanceController);
+router.get('/', authorize('admin', 'chauffeur'), getAllMaintenancesController);
+router.get('/camion/:camionId', authorize('admin', 'chauffeur'), getMaintenancesByCamionController);
+router.get('/:id', authorize('admin', 'chauffeur'), getMaintenanceByIdController);
+router.put('/:id', authorize('admin', 'chauffeur'), updateMaintenanceController);
+
+// Routes admin only
+router.delete('/:id', authorize('admin'), deleteMaintenanceController);
 
 export default router;

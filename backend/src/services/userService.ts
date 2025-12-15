@@ -53,7 +53,7 @@ export const login = async ({email, password}: LoginParams) => {
     
     const passwordMatch = await bcrypt.compare(password, findUser.password);
     if(passwordMatch){
-        const token = jwt.sign({ id: findUser._id, role: findUser.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+        const token = jwt.sign({ id: findUser._id, role: findUser.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
         return { user: findUser, token }
     }
 
@@ -89,6 +89,17 @@ export const getPendingUsers = async () => {
 export const getAllChauffeurs = async () => {
     const chauffeurs = await userModel.find({ role: 'chauffeur' }).select('-password');
     return chauffeurs;
+}
+
+// Récupérer les chauffeurs disponibles (pas en trajet actif)
+export const getAvailableChauffeurs = async () => {
+    const { getActiveTrajetResources } = await import('./trajetService.js');
+    const { chauffeurIds } = await getActiveTrajetResources();
+    return userModel.find({ 
+        role: 'chauffeur',
+        isActive: true,
+        _id: { $nin: chauffeurIds }
+    }).select('-password');
 }
 
 // Activer/Désactiver un utilisateur

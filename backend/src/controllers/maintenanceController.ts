@@ -3,19 +3,22 @@ import Joi from 'joi';
 import * as maintenanceService from '../services/maintenanceService.js';
 
 const maintenanceSchema = Joi.object({
-    camionId: Joi.string().required(),
+    camionId: Joi.string().allow(null, ''),
+    remorqueId: Joi.string().allow(null, ''),
     type: Joi.string().valid('vidange', 'pneus', 'revision', 'reparation').required(),
     description: Joi.string().required(),
     datePrevue: Joi.date().required(),
     dateRealisee: Joi.date().allow(null),
     cout: Joi.number().min(0).allow(null),
     statut: Joi.string().valid('planifiee', 'terminee').default('planifiee')
-});
+}).or('camionId', 'remorqueId');
 
 const validate = (schema: Joi.ObjectSchema, data: object) => {
+    console.log('Validating data:', JSON.stringify(data, null, 2));
     const { error, value } = schema.validate(data, { abortEarly: false });
     if (error) {
         const messages = error.details.map(d => d.message).join(', ');
+        console.error('Validation error:', messages);
         throw { status: 400, message: messages };
     }
     return value;
@@ -82,6 +85,36 @@ export const deleteMaintenanceController = async (req: Request, res: Response) =
         const maintenance = await maintenanceService.deleteMaintenance(id);
         if (!maintenance) return res.status(404).json({ message: 'Maintenance non trouvée' });
         res.json({ message: 'Maintenance supprimée' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+// Get upcoming maintenances (next 7 days)
+export const getUpcomingMaintenancesController = async (_req: Request, res: Response) => {
+    try {
+        const maintenances = await maintenanceService.getUpcomingMaintenances();
+        res.json(maintenances);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+// Get overdue maintenances (past due date, not completed)
+export const getOverdueMaintenancesController = async (_req: Request, res: Response) => {
+    try {
+        const maintenances = await maintenanceService.getOverdueMaintenances();
+        res.json(maintenances);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+// Get maintenance statistics for dashboard
+export const getMaintenanceStatsController = async (_req: Request, res: Response) => {
+    try {
+        const stats = await maintenanceService.getMaintenanceStats();
+        res.json(stats);
     } catch (error: any) {
         res.status(500).json({ message: error.message || 'Erreur serveur' });
     }

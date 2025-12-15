@@ -9,7 +9,7 @@ const pneuSchema = Joi.object({
     marque: Joi.string().required(),
     kmInstallation: Joi.number().min(0).required(),
     kmLimite: Joi.number().min(0).required(),
-    statut: Joi.string().valid('bon', 'use', 'a_changer').default('bon')
+    statut: Joi.string().valid('bon', 'use', 'critique').default('bon')
 });
 
 const validate = (schema: Joi.ObjectSchema, data: object) => {
@@ -85,6 +85,27 @@ export const deletePneuController = async (req: Request, res: Response) => {
         const pneu = await pneuService.deletePneu(id);
         if (!pneu) return res.status(404).json({ message: 'Pneu non trouvé' });
         res.json({ message: 'Pneu supprimé' });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+export const getCritiquesController = async (_req: Request, res: Response) => {
+    try {
+        const critiques = await pneuService.getCritiquesPneus();
+        res.json(critiques);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message || 'Erreur serveur' });
+    }
+};
+
+export const checkKilometrageController = async (_req: Request, res: Response) => {
+    try {
+        const updatedCount = await pneuService.checkPneusKilometrage();
+        res.json({ 
+            message: `Vérification terminée. ${updatedCount} pneus mis à jour vers statut critique.`,
+            updatedCount 
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message || 'Erreur serveur' });
     }

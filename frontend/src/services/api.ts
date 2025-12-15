@@ -33,7 +33,7 @@ api.interceptors.response.use(
 export const authAPI = {
     login: (email: string, password: string) =>
         api.post('/user/login', { email, password }),
-    
+
     register: (userData: any) =>
         api.post('/user/register', userData),
 };
@@ -42,9 +42,68 @@ export const authAPI = {
 export const adminAPI = {
     getChauffeurs: () =>
         api.get('/user/chauffeurs'),
-    
+
+    getAvailableChauffeurs: () =>
+        api.get('/user/chauffeurs/available'),
+
     toggleChauffeurStatus: (id: string) =>
         api.patch(`/user/chauffeurs/${id}/toggle`),
+};
+
+// API Camions
+export const camionAPI = {
+    getAll: () => api.get('/camion'),
+    getAvailable: () => api.get('/camion/available'),
+    getById: (id: string) => api.get(`/camion/${id}`),
+    create: (data: any) => api.post('/camion', data),
+    update: (id: string, data: any) => api.put(`/camion/${id}`, data),
+    delete: (id: string) => api.delete(`/camion/${id}`),
+};
+
+// API Remorques
+export const remorqueAPI = {
+    getAll: () => api.get('/remorque'),
+    getAvailable: () => api.get('/remorque/available'),
+    getById: (id: string) => api.get(`/remorque/${id}`),
+    create: (data: any) => api.post('/remorque', data),
+    update: (id: string, data: any) => api.put(`/remorque/${id}`, data),
+    delete: (id: string) => api.delete(`/remorque/${id}`),
+};
+
+// API Pneus
+export const pneuAPI = {
+    getAll: () => api.get('/pneu'),
+    getCritiques: () => api.get('/pneu/critiques'),
+    checkKilometrage: () => api.post('/pneu/check-kilometrage'),
+    getById: (id: string) => api.get(`/pneu/${id}`),
+    getByVehicule: (vehiculeType: string, vehiculeId: string) =>
+        api.get(`/pneu/vehicule/${vehiculeType}/${vehiculeId}`),
+    create: (data: any) => api.post('/pneu', data),
+    update: (id: string, data: any) => api.put(`/pneu/${id}`, data),
+    delete: (id: string) => api.delete(`/pneu/${id}`),
+};
+
+// API Trajets
+export const trajetAPI = {
+    getAll: () => api.get('/trajet'),
+    getMyTrajets: () => api.get('/trajet/mes-trajets'),
+    getById: (id: string) => api.get(`/trajet/${id}`),
+    create: (data: any) => api.post('/trajet', data),
+    update: (id: string, data: any) => api.put(`/trajet/${id}`, data),
+    delete: (id: string) => api.delete(`/trajet/${id}`),
+};
+
+// API Maintenance
+export const maintenanceAPI = {
+    getAll: () => api.get('/maintenance'),
+    getUpcoming: () => api.get('/maintenance/upcoming'),
+    getOverdue: () => api.get('/maintenance/overdue'),
+    getStats: () => api.get('/maintenance/stats'),
+    getByCamion: (camionId: string) => api.get(`/maintenance/camion/${camionId}`),
+    getById: (id: string) => api.get(`/maintenance/${id}`),
+    create: (data: any) => api.post('/maintenance', data),
+    update: (id: string, data: any) => api.put(`/maintenance/${id}`, data),
+    delete: (id: string) => api.delete(`/maintenance/${id}`),
 };
 
 export default api;

@@ -1,6 +1,29 @@
 import { trajetModel, type ITrajet } from '../models/trajetModel.js';
+import { checkPneusKilometrage, checkPneusForTrajet } from './pneuService.js';
+
+// Récupérer les IDs des ressources actuellement en trajet actif
+export const getActiveTrajetResources = async () => {
+    const activeTrajets = await trajetModel.find({
+        statut: { $in: ['a_faire', 'en_cours'] }
+    });
+
+    return {
+        camionIds: activeTrajets.map(t => t.camionId.toString()),
+        remorqueIds: activeTrajets.filter(t => t.remorqueId).map(t => t.remorqueId!.toString()),
+        chauffeurIds: activeTrajets.map(t => t.chauffeurId.toString())
+    };
+};
 
 export const createTrajet = async (data: Partial<ITrajet>) => {
+    // Vérification proactive des pneus AVANT de créer le trajet
+    if (data.camionId && data.kilometrage) {
+        await checkPneusForTrajet(
+            data.camionId.toString(),
+            data.remorqueId?.toString(),
+            data.kilometrage
+        );
+    }
+
     const trajet = new trajetModel(data);
     return trajet.save();
 };
@@ -28,7 +51,15 @@ export const getTrajetById = async (id: string) => {
 };
 
 export const updateTrajet = async (id: string, data: Partial<ITrajet>) => {
-    return trajetModel.findByIdAndUpdate(id, data, { new: true });
+    const updatedTrajet = await trajetModel.findByIdAndUpdate(id, data, { new: true });
+
+    // Si le trajet est terminé, vérifier automatiquement les limites des pneus
+    if (data.statut === 'termine') {
+        console.log('Trajet terminé, vérification des limites kilométriques des pneus...');
+        await checkPneusKilometrage();
+    }
+
+    return updatedTrajet;
 };
 
 export const deleteTrajet = async (id: string) => {

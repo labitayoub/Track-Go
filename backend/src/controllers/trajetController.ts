@@ -10,8 +10,7 @@ const trajetSchema = Joi.object({
     arrivee: Joi.string().required(),
     dateDepart: Joi.date().required(),
     dateArrivee: Joi.date().allow(null),
-    kmDepart: Joi.number().min(0).required(),
-    kmArrivee: Joi.number().min(0).allow(null),
+    kilometrage: Joi.number().min(0).required(),
     gasoil: Joi.number().min(0).allow(null),
     statut: Joi.string().valid('a_faire', 'en_cours', 'termine').default('a_faire'),
     remarques: Joi.string().allow(null, '')

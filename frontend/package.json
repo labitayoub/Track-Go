@@ -18,6 +18,7 @@
     "@tailwindcss/postcss": "^4.1.17",
     "autoprefixer": "^10.4.22",
     "axios": "^1.13.2",
+    "joi": "^18.0.2",
     "postcss": "^8.5.6",
     "react": "^19.2.1",
     "react-dom": "^19.2.0",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/joi": "^17.2.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
