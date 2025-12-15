@@ -108,7 +108,7 @@ docker-compose ps
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost |
-| Backend API | http://localhost:3001/api |
+| Backend API | http://localhost:5000/api |
 | MongoDB | localhost:27017 |
 
 ### 5. Créer l'admin (première fois)
@@ -224,7 +224,7 @@ netstat -ano | findstr :27017
 ### Port déjà utilisé
 ```bash
 # Changer le port dans .env
-PORT=3001
+PORT=5000
 
 # Ou tuer le processus existant
 kill -9 <PID>

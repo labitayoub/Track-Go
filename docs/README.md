@@ -92,7 +92,7 @@
 │                         BACKEND                                 │
 │  ┌─────────────────────────────────────────────────────────┐   │
 │  │  Express.js + TypeScript                                │   │
-│  │  Port: 5000 (Dev) / 3001 (Production)                   │   │
+│  │  Port: 5000 (Dev) / 5000 (Production)                   │   │
 │  │                                                         │   │
 │  │  ┌─────────┐ ┌─────────────┐ ┌──────────┐              │   │
 │  │  │ Routes  │→│ Controllers │→│ Services │              │   │
@@ -652,7 +652,7 @@ docker-compose down -v
 | Service | Port Interne | Port Externe |
 |---------|--------------|--------------|
 | MongoDB | 27017 | 27017 |
-| Backend | 3001 | 3001 |
+| Backend | 5000 | 5000 |
 | Frontend | 80 | 80 |
 
 ---
