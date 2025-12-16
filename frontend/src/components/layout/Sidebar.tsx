@@ -19,6 +19,7 @@ import {
     TireRepair,
     Build,
     People,
+    Schedule,
 } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
@@ -39,6 +40,7 @@ const menuItems: MenuItem[] = [
     { label: 'Pneus', path: '/pneus', icon: <TireRepair /> },
     { label: 'Trajets', path: '/trajets', icon: <Route /> },
     { label: 'Maintenance', path: '/maintenance', icon: <Build />, adminOnly: true },
+    { label: 'Planification', path: '/planification', icon: <Schedule />, adminOnly: true },
 ];
 
 const Sidebar = () => {

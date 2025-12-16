@@ -11,6 +11,7 @@ import Remorques from '../pages/Remorques';
 import Pneus from '../pages/Pneus';
 import Trajets from '../pages/Trajets';
 import Maintenance from '../pages/Maintenance';
+import PlanificationMaintenance from '../pages/PlanificationMaintenance';
 import NotFound from '../pages/NotFound';
 
 const AppRoutes = () => {
@@ -46,6 +47,11 @@ const AppRoutes = () => {
                 <Route path="/maintenance" element={
                     <ProtectedRoute allowedRoles={['admin']}>
                         <Maintenance />
+                    </ProtectedRoute>
+                } />
+                <Route path="/planification" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                        <PlanificationMaintenance />
                     </ProtectedRoute>
                 } />
             </Route>

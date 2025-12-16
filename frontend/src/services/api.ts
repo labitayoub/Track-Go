@@ -106,4 +106,17 @@ export const maintenanceAPI = {
     delete: (id: string) => api.delete(`/maintenance/${id}`),
 };
 
+// API Règles de maintenance
+export const maintenanceRuleAPI = {
+    getAll: () => api.get('/regles-maintenance'),
+    getById: (id: string) => api.get(`/regles-maintenance/${id}`),
+    create: (data: any) => api.post('/regles-maintenance', data),
+    update: (id: string, data: any) => api.put(`/regles-maintenance/${id}`, data),
+    delete: (id: string) => api.delete(`/regles-maintenance/${id}`),
+    getAlertes: (camionId: string) => api.get(`/regles-maintenance/alertes/${camionId}`),
+    getToutesAlertes: () => api.get('/regles-maintenance/toutes-alertes'),
+    generer: (camionId: string) => api.post(`/regles-maintenance/generer/${camionId}`),
+    seed: () => api.post('/regles-maintenance/seed'),
+};
+
 export default api;

@@ -1,15 +1,31 @@
 import { useAuth } from '../context/AuthContext';
-import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert } from '@mui/material';
-import { People, LocalShipping, Route, Warning, RvHookup, TireRepair, Build } from '@mui/icons-material';
+import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert, Stack } from '@mui/material';
+import { People, LocalShipping, Route, Warning, RvHookup, TireRepair, Build, LocalGasStation, Settings, Refresh, DirectionsCar } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceAPI } from '../services/api';
+import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceAPI, maintenanceRuleAPI } from '../services/api';
 
 interface VehiculeCritique {
     vehiculeId: string;
     vehiculeType: 'camion' | 'remorque';
     immatriculation: string;
     pneus: Array<{ position: string; marque: string; _id: string }>;
+}
+
+interface MaintenanceAlerte {
+    type: string;
+    urgence: 'critique' | 'urgent' | 'preventive';
+    kmRestant: number;
+    message: string;
+}
+
+interface CamionAlerte {
+    camionId: string;
+    immatriculation: string;
+    marque: string;
+    modele: string;
+    kilometrage: number;
+    alertes: MaintenanceAlerte[];
 }
 
 interface MaintenanceStats {
@@ -43,6 +59,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState<Stats>({ camions: 0, chauffeurs: 0, remorques: 0, trajetsActifs: 0, alertes: 0, maintenanceEnRetard: 0 });
     const [vehiculesCritiques, setVehiculesCritiques] = useState<VehiculeCritique[]>([]);
+    const [maintenanceAlertes, setMaintenanceAlertes] = useState<CamionAlerte[]>([]);
     const [chauffeurVehicles, setChauffeurVehicles] = useState<ChauffeurVehicle[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -63,13 +80,14 @@ const Dashboard = () => {
             // Load data based on user role
             if (isAdmin) {
                 // Admin loads all data
-                const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes] = await Promise.all([
+                const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes, maintenanceAlertesRes] = await Promise.all([
                     camionAPI.getAll(),
                     remorqueAPI.getAll(),
                     adminAPI.getChauffeurs(),
                     trajetAPI.getAll(),
                     pneuAPI.getCritiques(),
-                    maintenanceAPI.getStats()
+                    maintenanceAPI.getStats(),
+                    maintenanceRuleAPI.getToutesAlertes()
                 ]);
 
                 const maintenanceStats: MaintenanceStats = maintenanceStatsRes.data || { enRetard: 0, aVenir: 0 };
@@ -78,16 +96,23 @@ const Dashboard = () => {
                 const chauffeurs = chauffeursRes.data?.chauffeurs || chauffeursRes.data || [];
                 const trajets = trajetsRes.data || [];
                 const critiques: VehiculeCritique[] = critiquesRes.data || [];
+                const alertesMaintenance: CamionAlerte[] = maintenanceAlertesRes.data || [];
                 const trajetsActifs = trajets.filter((t: any) => t.statut === 'a_faire' || t.statut === 'en_cours').length;
 
+                // Compter alertes critiques et urgentes
+                const totalAlertesMaintenance = alertesMaintenance.reduce((acc, c) => 
+                    acc + c.alertes.filter(a => a.urgence === 'critique' || a.urgence === 'urgent').length, 0
+                );
+
                 setVehiculesCritiques(critiques);
+                setMaintenanceAlertes(alertesMaintenance);
                 setStats({
                     camions: camions.length,
                     chauffeurs: chauffeurs.length,
                     remorques: remorques.length,
                     trajetsActifs,
                     alertes: critiques.length,
-                    maintenanceEnRetard: maintenanceStats.enRetard
+                    maintenanceEnRetard: totalAlertesMaintenance
                 });
             } else {
                 // Chauffeur loads only their own data

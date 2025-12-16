@@ -27,9 +27,14 @@ export const remove = async (req: Request<{ id: string }>, res: Response) => {
     rule ? res.json({ message: 'Supprimé' }) : res.status(404).json({ message: 'Non trouvé' });
 };
 
-export const getAlertes = async (_req: Request, res: Response) => res.json(await service.calculerAlertes());
+export const getAlertes = async (req: Request<{ camionId: string }>, res: Response) => res.json(await service.calculerAlertes(req.params.camionId));
 
-export const generer = async (_req: Request, res: Response) => res.status(201).json(await service.genererMaintenances());
+export const getToutesAlertes = async (_req: Request, res: Response) => res.json(await service.calculerToutesAlertes());
+
+export const generer = async (req: Request<{ camionId: string }>, res: Response) => {
+    const maintenances = await service.genererMaintenances(req.params.camionId);
+    res.status(201).json({ maintenancesCreees: maintenances.length, maintenances });
+};
 
 export const seed = async (_req: Request, res: Response) => {
     await service.seedDefaultRules();

@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IMaintenance extends Document {
     camionId?: mongoose.Types.ObjectId;
     remorqueId?: mongoose.Types.ObjectId;
-    type: 'vidange' | 'pneus' | 'revision' | 'reparation';
+    type: 'vidange' | 'pneus' | 'revision' | 'reparation' | 'gasoil';
     description: string;
     datePrevue: Date;
     dateRealisee?: Date;
@@ -16,7 +16,7 @@ const maintenanceSchema = new Schema<IMaintenance>({
     remorqueId: { type: Schema.Types.ObjectId, ref: 'Remorque' },
     type: {
         type: String,
-        enum: ['vidange', 'pneus', 'revision', 'reparation'],
+        enum: ['vidange', 'pneus', 'revision', 'reparation', 'gasoil'],
         required: true
     },
     description: { type: String, required: true },

@@ -4,7 +4,7 @@ import Joi from 'joi';
 export const maintenanceSchema = Joi.object({
     camionId: Joi.string().optional(),
     remorqueId: Joi.string().optional(),
-    type: Joi.string().valid('vidange', 'pneus', 'revision', 'reparation').required().messages({
+    type: Joi.string().valid('vidange', 'pneus', 'revision', 'reparation', 'gasoil').required().messages({
         'any.required': 'Type requis',
         'any.only': 'Type invalide'
     }),

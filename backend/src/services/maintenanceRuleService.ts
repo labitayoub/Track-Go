@@ -9,59 +9,81 @@ export const getRuleById = async (id: string) => maintenanceRuleModel.findById(i
 export const updateRule = async (id: string, data: Partial<IMaintenanceRule>) => maintenanceRuleModel.findByIdAndUpdate(id, data, { new: true });
 export const deleteRule = async (id: string) => maintenanceRuleModel.findByIdAndDelete(id);
 
-// Calcul automatique des alertes
-export const calculerAlertes = async () => {
+// Calcul automatique des alertes pour un camion spécifique
+export const calculerAlertes = async (camionId: string) => {
     const regles = await maintenanceRuleModel.find({ actif: true });
-    const camions = await camionModel.find();
+    const camion = await camionModel.findById(camionId);
+    if (!camion) return [];
+    
     const alertes: any[] = [];
 
-    for (const camion of camions) {
-        for (const regle of regles) {
-            const derniere = await maintenanceModel.findOne({
-                camionId: camion._id,
+    for (const regle of regles) {
+        const derniere = await maintenanceModel.findOne({
+            camionId: camion._id,
+            type: regle.type,
+            statut: 'terminee'
+        }).sort({ dateRealisee: -1 });
+
+        // Calcul km depuis dernière maintenance (ou depuis 0 si jamais fait)
+        const kmDerniereMaintenance = derniere?.cout || 0;
+        const kmDepuis = camion.kilometrage - kmDerniereMaintenance;
+        const kmRestant = regle.seuilKm - kmDepuis;
+
+        let urgence: 'critique' | 'urgent' | 'preventive' = 'preventive';
+        if (kmRestant <= 0) urgence = 'critique';
+        else if (kmRestant <= regle.alerteAvantKm) urgence = 'urgent';
+
+        if (kmRestant <= regle.alerteAvantKm) {
+            alertes.push({
                 type: regle.type,
-                statut: 'terminee'
-            }).sort({ dateRealisee: -1 });
-
-            const kmDepuis = derniere ? camion.kilometrage - (derniere.cout || 0) : camion.kilometrage;
-            const joursDepuis = derniere?.dateRealisee
-                ? Math.floor((Date.now() - new Date(derniere.dateRealisee).getTime()) / 86400000)
-                : 999;
-
-            const kmRestant = regle.seuilKm - kmDepuis;
-            const joursRestant = regle.seuilJours - joursDepuis;
-
-            if (kmRestant <= regle.alerteAvantKm || joursRestant <= regle.alerteAvantJours) {
-                alertes.push({
-                    camionId: camion._id,
-                    immatriculation: camion.immatriculation,
-                    type: regle.type,
-                    urgence: kmRestant <= 0 || joursRestant <= 0 ? 'critique' : 'preventive',
-                    kmRestant: Math.max(0, kmRestant),
-                    joursRestant: Math.max(0, joursRestant)
-                });
-            }
+                urgence,
+                kmRestant: Math.max(0, kmRestant),
+                seuilKm: regle.seuilKm,
+                kmActuel: camion.kilometrage,
+                message: `${Math.max(0, kmRestant)} km restants avant ${regle.type}`
+            });
         }
     }
     return alertes;
 };
 
-// Générer maintenances planifiées automatiquement
-export const genererMaintenances = async () => {
-    const alertes = await calculerAlertes();
+// Calcul de toutes les alertes pour tous les camions
+export const calculerToutesAlertes = async () => {
+    const camions = await camionModel.find();
+    const toutesAlertes: any[] = [];
+
+    for (const camion of camions) {
+        const alertes = await calculerAlertes(camion._id.toString());
+        if (alertes.length > 0) {
+            toutesAlertes.push({
+                camionId: camion._id,
+                immatriculation: camion.immatriculation,
+                marque: camion.marque,
+                modele: camion.modele,
+                kilometrage: camion.kilometrage,
+                alertes
+            });
+        }
+    }
+    return toutesAlertes;
+};
+
+// Générer maintenances planifiées pour un camion
+export const genererMaintenances = async (camionId: string) => {
+    const alertes = await calculerAlertes(camionId);
     const created: any[] = [];
 
     for (const a of alertes) {
-        const existe = await maintenanceModel.findOne({ camionId: a.camionId, type: a.type, statut: 'planifiee' });
+        const existe = await maintenanceModel.findOne({ camionId, type: a.type, statut: 'planifiee' });
         if (existe) continue;
 
         const datePrevue = new Date();
         datePrevue.setDate(datePrevue.getDate() + (a.urgence === 'critique' ? 1 : 7));
 
         const m = await maintenanceModel.create({
-            camionId: a.camionId,
+            camionId,
             type: a.type,
-            description: `[AUTO] ${a.type} - ${a.kmRestant}km / ${a.joursRestant}j restants`,
+            description: `[AUTO] ${a.type} - ${a.kmRestant}km restants`,
             datePrevue,
             statut: 'planifiee'
         });
@@ -73,10 +95,10 @@ export const genererMaintenances = async () => {
 // Seeder des règles par défaut
 export const seedDefaultRules = async () => {
     const defaults = [
-        { nom: 'Vidange moteur', type: 'vidange', seuilKm: 10000, seuilJours: 180, alerteAvantKm: 1000, alerteAvantJours: 14 },
-        { nom: 'Changement pneus', type: 'pneus', seuilKm: 50000, seuilJours: 730, alerteAvantKm: 5000, alerteAvantJours: 30 },
-        { nom: 'Révision générale', type: 'revision', seuilKm: 30000, seuilJours: 365, alerteAvantKm: 3000, alerteAvantJours: 30 },
-        { nom: 'Contrôle gasoil', type: 'gasoil', seuilKm: 5000, seuilJours: 30, alerteAvantKm: 500, alerteAvantJours: 7 }
+        { nom: 'Vidange moteur', type: 'vidange', seuilKm: 10000, alerteAvantKm: 1000 },
+        { nom: 'Changement pneus', type: 'pneus', seuilKm: 50000, alerteAvantKm: 5000 },
+        { nom: 'Révision générale', type: 'revision', seuilKm: 30000, alerteAvantKm: 3000 },
+        { nom: 'Contrôle gasoil', type: 'gasoil', seuilKm: 5000, alerteAvantKm: 500 }
     ];
 
     for (const r of defaults) {

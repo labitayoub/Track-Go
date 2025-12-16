@@ -36,6 +36,7 @@ import {
     LocalGasStation,
     Settings,
     Refresh,
+    DirectionsCar,
 } from '@mui/icons-material';
 
 // Interfaces
@@ -51,7 +52,7 @@ interface MaintenanceRecord {
     _id: string;
     camionId?: { _id: string; immatriculation: string } | string;
     remorqueId?: { _id: string; immatriculation: string } | string;
-    type: 'vidange' | 'pneus' | 'revision' | 'reparation';
+    type: 'vidange' | 'pneus' | 'revision' | 'reparation' | 'gasoil';
     description: string;
     datePrevue: string;
     dateRealisee?: string;
@@ -64,6 +65,7 @@ const typeColors: Record<string, string> = {
     pneus: '#2196f3',
     revision: '#9c27b0',
     reparation: '#f44336',
+    gasoil: '#4caf50',
 };
 
 const typeLabels: Record<string, string> = {
@@ -71,6 +73,7 @@ const typeLabels: Record<string, string> = {
     pneus: 'Pneus',
     revision: 'Révision',
     reparation: 'Réparation',
+    gasoil: 'Gasoil',
 };
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -78,6 +81,7 @@ const typeIcons: Record<string, React.ReactNode> = {
     pneus: <Settings />,
     revision: <Refresh />,
     reparation: <Build />,
+    gasoil: <DirectionsCar />,
 };
 
 const Maintenance = () => {
@@ -95,7 +99,7 @@ const Maintenance = () => {
     const [formData, setFormData] = useState({
         camionId: '',
         remorqueId: '',
-        type: 'vidange' as 'vidange' | 'pneus' | 'revision' | 'reparation',
+        type: 'vidange' as 'vidange' | 'pneus' | 'revision' | 'reparation' | 'gasoil',
         description: '',
         datePrevue: '',
         dateRealisee: '',
