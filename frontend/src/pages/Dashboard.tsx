@@ -381,6 +381,99 @@ const Dashboard = () => {
                 </Card>
             )}
 
+            {/* Section Alertes Maintenance - Admin seulement */}
+            {user?.role === 'admin' && maintenanceAlertes.length > 0 && (
+                <Card sx={{
+                    p: 3,
+                    mb: 4,
+                    border: '2px solid #ff9800',
+                    borderRadius: 3,
+                    bgcolor: '#fff8e1'
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Avatar sx={{ bgcolor: '#ff9800', color: 'white' }}>
+                            <Build />
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#e65100' }}>
+                                🔧 Alertes Maintenance Préventive
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {maintenanceAlertes.length} camion(s) nécessitent une maintenance
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            sx={{ bgcolor: '#ff9800', '&:hover': { bgcolor: '#f57c00' }, borderRadius: 2 }}
+                            startIcon={<Build />}
+                            onClick={() => navigate('/planification')}
+                        >
+                            Planifier
+                        </Button>
+                    </Box>
+
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                        {maintenanceAlertes.map((camion) => (
+                            <Card
+                                key={camion.camionId}
+                                sx={{
+                                    p: 2,
+                                    border: '1px solid #ffe0b2',
+                                    bgcolor: 'white',
+                                    borderRadius: 2,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        boxShadow: '0 4px 12px rgba(255, 152, 0, 0.2)'
+                                    }
+                                }}
+                                onClick={() => navigate('/planification')}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                    <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                                        <LocalShipping />
+                                    </Avatar>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                            {camion.immatriculation}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {camion.marque} {camion.modele} • {camion.kilometrage.toLocaleString()} km
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    {camion.alertes.map((alerte, idx) => {
+                                        const icons: Record<string, React.ReactNode> = {
+                                            vidange: <LocalGasStation sx={{ fontSize: 16 }} />,
+                                            pneus: <Settings sx={{ fontSize: 16 }} />,
+                                            revision: <Refresh sx={{ fontSize: 16 }} />,
+                                            gasoil: <DirectionsCar sx={{ fontSize: 16 }} />
+                                        };
+                                        const colors: Record<string, 'error' | 'warning' | 'info'> = {
+                                            critique: 'error',
+                                            urgent: 'warning',
+                                            preventive: 'info'
+                                        };
+                                        return (
+                                            <Chip
+                                                key={idx}
+                                                icon={icons[alerte.type] as React.ReactElement}
+                                                label={`${alerte.type}: ${alerte.kmRestant} km`}
+                                                color={colors[alerte.urgence]}
+                                                size="small"
+                                                sx={{ my: 0.5 }}
+                                            />
+                                        );
+                                    })}
+                                </Stack>
+                            </Card>
+                        ))}
+                    </Box>
+                </Card>
+            )}
+
             {/* Admin Content */}
             {user?.role === 'admin' && (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>

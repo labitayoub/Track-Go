@@ -11,7 +11,7 @@ jest.mock('../models/maintenanceModel.js', () => ({
     maintenanceModel: { findOne: jest.fn(), create: jest.fn() }
 }));
 jest.mock('../models/camionModel.js', () => ({
-    camionModel: { find: jest.fn() }
+    camionModel: { find: jest.fn(), findById: jest.fn() }
 }));
 
 import { maintenanceRuleModel } from '../models/maintenanceRuleModel.js';
@@ -46,20 +46,39 @@ describe('MaintenanceRuleService', () => {
         expect(await deleteRule('1')).toEqual({ _id: '1' });
     });
 
-    it('calculerAlertes: retourne alertes pour camions', async () => {
+    it('calculerAlertes: retourne alertes pour un camion', async () => {
         (maintenanceRuleModel.find as jest.Mock).mockResolvedValue([
-            { type: 'vidange', seuilKm: 10000, seuilJours: 180, alerteAvantKm: 1000, alerteAvantJours: 14, actif: true }
+            { type: 'vidange', seuilKm: 10000, alerteAvantKm: 1000, actif: true }
         ]);
-        (camionModel.find as jest.Mock).mockResolvedValue([
+        (camionModel.findById as jest.Mock).mockResolvedValue(
             { _id: 'c1', immatriculation: 'ABC-123', kilometrage: 9500 }
-        ]);
+        );
         (maintenanceModel.findOne as jest.Mock).mockReturnValue({ sort: jest.fn().mockResolvedValue(null) });
 
         const { calculerAlertes } = await import('../services/maintenanceRuleService.js');
-        const alertes = await calculerAlertes();
+        const alertes = await calculerAlertes('c1');
         
         expect(alertes.length).toBe(1);
         expect(alertes[0].type).toBe('vidange');
-        expect(alertes[0].urgence).toBe('critique');
+        expect(alertes[0].urgence).toBe('urgent');
+    });
+
+    it('calculerToutesAlertes: retourne alertes pour tous les camions', async () => {
+        (camionModel.find as jest.Mock).mockResolvedValue([
+            { _id: { toString: () => 'c1' }, immatriculation: 'ABC-123', marque: 'Volvo', modele: 'FH', kilometrage: 9500 }
+        ]);
+        (maintenanceRuleModel.find as jest.Mock).mockResolvedValue([
+            { type: 'vidange', seuilKm: 10000, alerteAvantKm: 1000, actif: true }
+        ]);
+        (camionModel.findById as jest.Mock).mockResolvedValue(
+            { _id: 'c1', immatriculation: 'ABC-123', kilometrage: 9500 }
+        );
+        (maintenanceModel.findOne as jest.Mock).mockReturnValue({ sort: jest.fn().mockResolvedValue(null) });
+
+        const { calculerToutesAlertes } = await import('../services/maintenanceRuleService.js');
+        const result = await calculerToutesAlertes();
+        
+        expect(result.length).toBe(1);
+        expect(result[0].immatriculation).toBe('ABC-123');
     });
 });
