@@ -8,6 +8,7 @@ import remorqueRoute from "./routes/remorqueRoute.js";
 import pneuRoute from "./routes/pneuRoute.js";
 import trajetRoute from "./routes/trajetRoute.js";
 import maintenanceRoute from "./routes/maintenanceRoute.js";
+import maintenanceRuleRoute from "./routes/maintenanceRuleRoute.js";
 
 dotenv.config();
 const app = Express();
@@ -26,6 +27,7 @@ app.use('/api/remorque', remorqueRoute);
 app.use('/api/pneu', pneuRoute);
 app.use('/api/trajet', trajetRoute);
 app.use('/api/maintenance', maintenanceRoute);
+app.use('/api/regles-maintenance', maintenanceRuleRoute);
 
 // 404 Handler
 app.use((req, res) => {
