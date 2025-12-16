@@ -3,7 +3,7 @@ import { Box, Typography, Card, Avatar, Button, Chip, CircularProgress, Alert, S
 import { People, LocalShipping, Route, Warning, RvHookup, TireRepair, Build, LocalGasStation, Settings, Refresh, DirectionsCar } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceAPI, maintenanceRuleAPI } from '../services/api';
+import { camionAPI, remorqueAPI, adminAPI, trajetAPI, pneuAPI, maintenanceRuleAPI } from '../services/api';
 
 interface VehiculeCritique {
     vehiculeId: string;
@@ -26,14 +26,6 @@ interface CamionAlerte {
     modele: string;
     kilometrage: number;
     alertes: MaintenanceAlerte[];
-}
-
-interface MaintenanceStats {
-    total: number;
-    planifiees: number;
-    terminees: number;
-    enRetard: number;
-    aVenir: number;
 }
 
 interface Stats {
@@ -80,17 +72,15 @@ const Dashboard = () => {
             // Load data based on user role
             if (isAdmin) {
                 // Admin loads all data
-                const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceStatsRes, maintenanceAlertesRes] = await Promise.all([
+                const [camionsRes, remorquesRes, chauffeursRes, trajetsRes, critiquesRes, maintenanceAlertesRes] = await Promise.all([
                     camionAPI.getAll(),
                     remorqueAPI.getAll(),
                     adminAPI.getChauffeurs(),
                     trajetAPI.getAll(),
                     pneuAPI.getCritiques(),
-                    maintenanceAPI.getStats(),
                     maintenanceRuleAPI.getToutesAlertes()
                 ]);
 
-                const maintenanceStats: MaintenanceStats = maintenanceStatsRes.data || { enRetard: 0, aVenir: 0 };
                 const camions = camionsRes.data;
                 const remorques = remorquesRes.data;
                 const chauffeurs = chauffeursRes.data?.chauffeurs || chauffeursRes.data || [];
